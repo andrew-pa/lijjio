@@ -26,5 +26,26 @@ bo_file::bo_file(datablob<byte>* data)
 
 void bo_file::save(const string& filename)
 {
-	throw;
+	uint32 size = 0;
+	for (auto e : _entries)
+		size += e.data.length;
+	uint32* d = new uint32[size];
+	d[0] = type;
+	uint32* cd = d+1;
+	uint32 next_data_offset = (_entries.size()*sizeof(bo_header_entry))+1;
+	for (auto e : _entries)
+	{
+		bo_header_entry* he = (bo_header_entry*)cd;
+		he->size = e.data.length;
+		he->type = e.type;
+		memcpy(he->name, e.name.c_str(), 32);
+		he->data_offset = next_data_offset;
+		memcpy(d + next_data_offset, e.data.data, e.data.length);
+		next_data_offset += e.data.length;
+		cd += sizeof(bo_header_entry);
+	}
+	*cd = 0xE22DC0DE;
+	FILE* f = fopen(filename.c_str(), "wb");
+	fwrite(d, sizeof(uint32), size, f);
+	fclose(f);
 }

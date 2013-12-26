@@ -17,19 +17,27 @@ protected:
 	vector<bo_entry> _entries;
 	uint type;
 public:
+	bo_file(uint t)
+		: _entries(), type(t){}
 	bo_file(datablob<byte>* data);
 
-	inline datablob<byte>& operator[](const string& name)
+	inline datablob<uint32>& operator[](const string& name)
 	{
-		auto v = find_if(_entries.begin(), _entries.end(), [&](bo_entry b) {});
+		auto v = find_if(_entries.begin(), _entries.end(), [&](bo_entry b) 
+		{
+			return b.name == name;
+		});
 		if (v != _entries.end())
 			return v->data;
 		else
 			throw exception(("can't find " + name + " in file").c_str());
 	}
-	inline const datablob<byte>& operator[](const string& name) const
+	inline const datablob<uint32>& operator[](const string& name) const
 	{
-		auto v = find_if(_entries.begin(), _entries.end(), [&](bo_entry b) {});
+		auto v = find_if(_entries.begin(), _entries.end(), [&](bo_entry b) 
+		{
+			return b.name == name;
+		});
 		if (v != _entries.end())
 			return v->data;
 		else
