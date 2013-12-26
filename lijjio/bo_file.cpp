@@ -18,7 +18,7 @@ bo_file::bo_file(datablob<byte>* data)
 	{
 		bo_header_entry* bhe = (bo_header_entry*)cd;
 		_entries.push_back(
-			bo_entry(datablob<uint32>(d + bhe->data_offset, bhe->size), 
+			bo_entry(_strange_datablob<uint32>(d + bhe->data_offset, bhe->size), 
 				bhe->type, string(bhe->name)));
 		cd += sizeof(bo_header_entry);
 	}
@@ -27,13 +27,13 @@ bo_file::bo_file(datablob<byte>* data)
 void bo_file::save(const string& filename)
 {
 	uint32 size = 0;
-	for (auto e : _entries)
+	for (const auto& e : _entries)
 		size += e.data.length;
 	uint32* d = new uint32[size];
 	d[0] = type;
 	uint32* cd = d+1;
 	uint32 next_data_offset = (_entries.size()*sizeof(bo_header_entry))+1;
-	for (auto e : _entries)
+	for (auto& e : _entries)
 	{
 		bo_header_entry* he = (bo_header_entry*)cd;
 		he->size = e.data.length;
