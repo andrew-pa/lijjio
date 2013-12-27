@@ -6,15 +6,15 @@ struct bo_header_entry
 	uint size;
 	uint type;
 	uint data_offset;
-	char name[32];
+	char name[16];
 };
 
 bo_file::bo_file(datablob<byte>* data)
-	: _entries(), type(*(uint32*)data->data)
+	: _entries()
 {
-	uint32* d = ((uint32*)data->data) + 1;
+	uint32* d = ((uint32*)data->data);
 	uint32* cd = d;
-	while (*cd != 0xE22DC0DE && cd < d+data->length) //0xendcode
+	while (*cd != 0xE22DC0DE && cd < d+data->length) //0xendcode is the end of the header
 	{
 		bo_header_entry* bhe = (bo_header_entry*)cd;
 		_entries.push_back(
@@ -26,26 +26,25 @@ bo_file::bo_file(datablob<byte>* data)
 
 void bo_file::save(const string& filename)
 {
-	uint32 size = 0;
-	for (const auto& e : _entries)
-		size += e.data.length;
-	uint32* d = new uint32[size];
-	d[0] = type;
-	uint32* cd = d+1;
-	uint32 next_data_offset = (_entries.size()*sizeof(bo_header_entry))+1;
+	bo_header_entry* header = new bo_header_entry[_entries.size()];
+	int i = 0;
+	uint ndo = sizeof(bo_header_entry)*_entries.size();
 	for (auto& e : _entries)
 	{
-		bo_header_entry* he = (bo_header_entry*)cd;
-		he->size = e.data.length;
-		he->type = e.type;
-		memcpy(he->name, e.name.c_str(), 32);
-		he->data_offset = next_data_offset;
-		memcpy(d + next_data_offset, e.data.data, e.data.length);
-		next_data_offset += e.data.length;
-		cd += sizeof(bo_header_entry);
+		header[i].size = e.data.length;
+		header[i].type = e.type;
+		memcpy(header[i].name, e.name.c_str(), 16);
+		header[i].data_offset = ndo;
+		ndo += e.data.length*sizeof(uint32);
+		i++;
 	}
-	*cd = 0xE22DC0DE;
 	FILE* f = fopen(filename.c_str(), "wb");
-	fwrite(d, sizeof(uint32), size, f);
+	fwrite(header, sizeof(bo_header_entry), _entries.size(), f);
+	for (int k = 0; k < _entries.size(); ++k)
+	{
+		fseek(f, header[k].data_offset, 0);
+		fwrite(_entries[k].data.data, sizeof(uint32), _entries[k].data.length, f);
+	}
 	fclose(f);
+	delete[] header;
 }

@@ -1,6 +1,14 @@
 #include <helper.h>
-#include "../lijjio/bo_file.h"
 
+
+#define OLD_BO
+#ifndef OLD_BO
+#include "../lijjio/bo_file.h"
+#else
+#include <bofile.h>
+#endif
+
+using namespace aldx;
 
 struct vertex
 {
@@ -141,6 +149,46 @@ int main(int argc, char* argv[])
 		}
 	}
 #pragma endregion
+#ifdef OLD_BO
+	{
+		//each obj object is mapped to a bo object
+		//each one is much like a simple mesb object
+		bo_header* boh = new bo_header();
+		boh->file_type = 8; //BO Std File type - Mesh Data
+		boh->number_of_objects = objects.size();
+		if (objects.size() > 1024) //max bo objects
+		{
+			cerr << "Number of objects in mesh greater than max number of objects a BO file can hold";
+			return -1;
+		}
+
+		int bo_objidx = 0;
+
+		const uint dt_size = objects.size() * sizeof(bo_object)+sizeof(uint)* 2;
+		//uint next_object_ptr = dt_size;
+
+		FILE* f = fopen(argv[2], "wb");
+		fwrite(boh, dt_size, 1, f);
+
+		for (auto o = objects.begin(); o != objects.end(); ++o)
+		{
+			memcpy(boh->objects[bo_objidx].name, o->first.c_str(), 16);
+			boh->objects[bo_objidx].size = o->second.size();
+			boh->objects[bo_objidx].type = 0; //object
+			boh->objects[bo_objidx].data_offset = ftell(f);
+			fwrite(o->second.mesb_rep(), o->second.size(), 1, f);
+
+			//next_object_ptr = ftell(f);
+			bo_objidx++;
+		}
+
+		fseek(f, 0, SEEK_SET);
+		fwrite(boh, dt_size, 1, f);
+
+		fclose(f);
+		return 0;
+	}
+#else
 
 	bo_file bf{ 8 };
 	for (auto o : objects)
@@ -151,4 +199,5 @@ int main(int argc, char* argv[])
 	}
 	bf.save(argv[2]);
 	return 0;
+#endif
 }
