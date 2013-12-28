@@ -11,7 +11,7 @@ static const D3D11_INPUT_ELEMENT_DESC posnormtex_layout[] =
 	{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 };
 
-struct basic_material
+struct basic_material : public material
 {
 	float4 dif;
 	float3 spec;
@@ -21,6 +21,11 @@ struct basic_material
 	basic_material(float4 d, float3 s, float sx, float3 a, bool c)
 		: dif(d), spec(s), spec_exp(sx), amb(a), alpha_clip(c)
 	{
+	}
+
+	size_t get_size() 
+	{
+		return sizeof(basic_material);
 	}
 };
 
@@ -60,7 +65,10 @@ class basic_shader : public render_shader
 	};
 	struct object_cb
 	{
-		basic_material m;
+		float4 dif;
+		float3 spec;
+		float spec_exp;
+		float3 amb; bool alpha_clip;
 	};
 
 	constant_buffer<model_dep> model_depcb;
@@ -119,7 +127,20 @@ public:
 
 	inline void set_material(basic_material& m)
 	{
-		obj_cb.data().m = m;
+		obj_cb.data().dif = m.dif;
+		obj_cb.data().spec = m.spec;
+		obj_cb.data().spec_exp = m.spec_exp;
+		obj_cb.data().amb = m.amb;
+		obj_cb.data().alpha_clip = m.alpha_clip;
+	}
+	inline void set_material(const material* mat) override
+	{
+		auto m = dynamic_cast<const basic_material*>(mat);
+		obj_cb.data().dif = m->dif;
+		obj_cb.data().spec = m->spec;
+		obj_cb.data().spec_exp = m->spec_exp;
+		obj_cb.data().amb = m->amb;
+		obj_cb.data().alpha_clip = m->alpha_clip;
 	}
 
 	inline void set_texture(texture2d* t) override
@@ -128,7 +149,7 @@ public:
 	}
 	proprw(texture2d*, texture, { return tex; })
 
-		inline void bind(ComPtr<ID3D11DeviceContext> context) override
+	inline void bind(ComPtr<ID3D11DeviceContext> context) override
 	{
 			render_shader::bind(context);
 			model_depcb.bind(context, shader_stage::Vertex);

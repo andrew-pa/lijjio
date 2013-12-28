@@ -17,13 +17,13 @@ using namespace aldx;
 #include "basic_shader.h"
 #include "game_object.h"
 
-class lijjio_app : public dx_app
+class st_lijjio_app : public dx_app
 {
 	vector<game_object*> gameobjects;
 	camera cam;
 	basic_shader shd;
 public:
-	lijjio_app()
+	st_lijjio_app()
 		: dx_app(4, true),
 		cam(float3(0, 4, -5), float3(0, 0.1f, 0), 0.1f, 1000.f, to_radians(45.f))
 	{}

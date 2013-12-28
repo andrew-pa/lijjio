@@ -1,8 +1,10 @@
 #define LINK_DIRECTX
 #include <helper.h>
 
-#include "st_lijjio_app.h"
+#define DF
 
+#include "st_lijjio_app.h"
+#include "df_lijjio_app.h"
 
 
 int CALLBACK WinMain(
@@ -12,6 +14,10 @@ int CALLBACK WinMain(
 	_In_  int cmds
 	)
 {
-	lijjio_app app;
+#ifdef ST
+	st_lijjio_app app;
+#elif defined(DF)
+	df_lijjio_app app;
+#endif
 	app.run(inst, cmds, L"lijjio", 1280, 960);
 }

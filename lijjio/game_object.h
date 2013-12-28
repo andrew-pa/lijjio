@@ -42,9 +42,9 @@ public:
 		w = XMMatrixScalingFromVector(scl) * XMMatrixRotationRollPitchYawFromVector(rot) * XMMatrixTranslationFromVector(pos);
 	}
 
-	virtual void draw(ComPtr<ID3D11DeviceContext> context, basic_shader& shd)
+	virtual void draw(ComPtr<ID3D11DeviceContext> context, render_shader& shd)
 	{
-		shd.set_material(mm);
+		shd.set_material(dynamic_cast<material*>(&mm));
 		shd.set_texture(_tex);
 		for (int i = 0; i < _m->meshes().size(); ++i)
 		{
