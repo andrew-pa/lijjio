@@ -41,10 +41,12 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <IncludePath>C:\Users\Andrew\Source\aldx\aldx;$(IncludePath)</IncludePath>
     <LibraryPath>C:\Users\Andrew\Source\aldx\Debug;$(LibraryPath)</LibraryPath>
+    <ExecutablePath>C:\Users\Andrew\Source\lijjio\Release;$(ExecutablePath)</ExecutablePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <IncludePath>C:\Users\Andrew\Source\aldx\aldx;$(IncludePath)</IncludePath>
     <LibraryPath>C:\Users\Andrew\Source\aldx\Release;$(LibraryPath)</LibraryPath>
+    <ExecutablePath>C:\Users\Andrew\Source\lijjio\Release;$(ExecutablePath)</ExecutablePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -92,6 +94,16 @@
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">5.0</ShaderModel>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">5.0</ShaderModel>
     </FxCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="cube.obj">
+      <DeploymentContent>true</DeploymentContent>
+      <FileType>Document</FileType>
+      <Command>objconv "C:\Users\Andrew\Source\lijjio\lijjio\cube.obj" "C:\Users\Andrew\Source\lijjio\Debug\cube.bo"</Command>
+      <Outputs>C:\Users\Andrew\Source\lijjio\Debug\cube.bo</Outputs>
+      <LinkObjects>false</LinkObjects>
+      <TreatOutputAsContent>true</TreatOutputAsContent>
+    </CustomBuild>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

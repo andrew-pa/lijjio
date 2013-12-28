@@ -35,4 +35,8 @@
       <Filter>Source Files</Filter>
     </FxCompile>
   </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="sphere.obj" />
+    <CustomBuild Include="cube.obj" />
+  </ItemGroup>
 </Project>

@@ -53,23 +53,23 @@ struct ps_in
 
 float4 main(ps_in i) : SV_TARGET
 {
-	return float4(0, 1, 0, 1);
 	float3 n = normalize(i.normW);
 	float3 to_cam = normalize(cam_pos - i.posW);
 
-	float3 color = m.amb;
 
 	float4 texcol = diffuse_texture.Sample(smp, i.texc);
 	if (m.alpha_clip)
 	{
 		clip(texcol.w - 0.2f);
 	}
+	float3 color = m.amb*texcol;
 
 	for (int pli = 0; pli < num_point_lights; ++pli)
 	{
 		float3 l = (point_lights[pli].pos - i.posW);
-		float a = 1 / dot(l, l); //inverse squared light factor
-		if (a < 0.1f) continue;
+		float a = (1 / dot(l, l)) * point_lights[pli].pos.w; //inverse squared light factor
+		a = clamp(a, 0, 1);
+		//if (a < 0.1f) continue;
 		l = normalize(l);
 		float df = max(dot(l, n), 0);
 		float3 tlc = df * texcol.xyz * m.dif.xyz * 
