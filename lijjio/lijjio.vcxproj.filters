@@ -26,6 +26,15 @@
     <ClInclude Include="bo_file.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="basic_shader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="st_lijjio_app.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="game_object.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="basic_vs.hlsl">

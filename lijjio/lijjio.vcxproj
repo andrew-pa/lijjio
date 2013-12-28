@@ -79,7 +79,10 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="basic_shader.h" />
     <ClInclude Include="bo_file.h" />
+    <ClInclude Include="game_object.h" />
+    <ClInclude Include="st_lijjio_app.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="basic_ps.hlsl">
