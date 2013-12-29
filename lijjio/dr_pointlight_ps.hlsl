@@ -32,6 +32,7 @@ cbuffer lighting : register (b2)
 Texture2D diffuse_buffer : register(t0);
 Texture2D positions_buffer : register(t1);
 Texture2D normals_buffer : register(t2);
+Texture2D spec_buffer : register(t3);
 SamplerState smp : register(s0);
 
 struct ps_in
@@ -41,53 +42,47 @@ struct ps_in
 	float3 normW : NORMAL;
 };
 
-float4 main(ps_in i) : SV_TARGET
+float4 shade(float2 tc)
 {
-	//return float4(m.spec_exp, m.spec_exp, m.spec_exp, m.spec_exp);
-	float3 pw = positions_buffer.Sample(smp, i.texc).xyz;
+	float3 pw = positions_buffer.Sample(smp, tc).xyz;
 	float3 to_cam = normalize(cam_pos - pw);
-	float3 n = normalize(normals_buffer.Sample(smp, i.texc).xyz);
+	float3 n = normalize(normals_buffer.Sample(smp, tc).xyz);
 	float3 l = pl.pos - pw;
-	float a = clamp(pl.pos.w / dot(l, l), 0, 1);
+	float a = clamp(1 / (pl.pos.w * dot(l, l)), 0, 1);;
 	l = normalize(l);
 	float df = max(dot(l, n), 0);
-	float3 color = df*diffuse_buffer.Sample(smp, i.texc)*pl.col.xyz;
-	//if (df > 0 && m.spec_exp > 0)
-	//{
-	//	float3 v = reflect(-l, n);
-	////		float sf = pow(max(dot(v, to_cam), 0), m.spec_exp);
-	//	color += sf * m.spec * pl.col;
-	//}
-	return float4(color, 1);
-/*	if (i.texc.y < 0.5f)
+	float3 color = df*diffuse_buffer.Sample(smp, tc)*pl.col.xyz;
+	if (df > 0)
 	{
-		if (i.texc.x < 0.5f)
-			return diffuse_buffer.Sample(smp, i.texc*2.f);
+		float4 sp = spec_buffer.Sample(smp, tc);
+		if (sp.x > 0)
+		{
+			float3 v = reflect(-l, n);
+				float sf = pow(max(dot(v, to_cam), 0), sp.x);
+			color += sf * sp.yzw * pl.col;
+		}
+	}
+	return float4(color*a, 1);
+}
+
+float4 main(ps_in i) : SV_TARGET
+{
+	//shade(i.texc);
+	
+	if (i.texc.y < 0.25f)
+	{
+		if (i.texc.x < 0.25f)
+			return diffuse_buffer.Sample(smp, i.texc*4.f);
+		else if (i.texc.x > 0.25f && i.texc.x < 0.50f)
+			return positions_buffer.Sample(smp, i.texc*4.f);
+		else if (i.texc.x > .5f && i.texc.x < .75f)
+			return normals_buffer.Sample(smp, i.texc*4.f);
 		else
-			return normals_buffer.Sample(smp, i.texc*2.f);
+			return spec_buffer.Sample(smp, i.texc*4.f);
 	}
 	else
 	{
-		if(i.texc.x < 0.5f)
-			return positions_buffer.Sample(smp, i.texc*float2(2.f, 2.f));
-		else
-		{
-			float3 pw = positions_buffer.Sample(smp, i.texc).xyz;
-				float3 to_cam = normalize(cam_pos - pw);
-			float3 n = normalize(normals_buffer.Sample(smp, i.texc).xyz);
-			float3 l = pl.pos - pw;
-			float a = clamp(pl.pos.w / dot(l, l), 0, 1);
-			l = normalize(l);
-			float df = max(dot(l, n), 0);
-			float3 color = df*diffuse_buffer.Sample(smp, i.texc)*pl.col.xyz;
-			if (df > 0 && m.spec_exp > 0)
-			{
-				float3 v = reflect(-l, n);
-				float sf = pow(max(dot(v, to_cam), 0), m.spec_exp);
-				color += sf * m.spec * pl.col;
-			}
-			return float4(color, 1);
-		}
+		return shade(i.texc);
 	}
-		*/
+		
 }

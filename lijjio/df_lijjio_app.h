@@ -17,15 +17,16 @@ using namespace aldx;
 
 #include "basic_shader.h"
 #include "game_object.h"
+#include "deferred_renderer.h"
 
-mesh* create_ndc_quad(ComPtr<ID3D11Device> device)
+mesh* create_ndc_quad(ComPtr<ID3D11Device> device, float r = 1.0f)
 {
 	dvertex v[] =
 	{
-		dvertex(-1, -1, 0, 0, 0, -1, 1, 0, 0, 0, 1),
-		dvertex(-1, 1, 0, 0, 0, -1, 0, 1, 0, 0, 0),
-		dvertex(1, 1, 0, 0, 0, -1, 1, 0, 0, 1, 0),
-		dvertex(1, -1, 0, 0, 0, -1, 1, 0, 0, 1, 1),
+		dvertex(-r, -r, 0, 0, 0, -r, r, 0, 0, 0, r),
+		dvertex(-r, r, 0, 0, 0, -r, 0, r, 0, 0, 0),
+		dvertex(r, r, 0, 0, 0, -r, r, 0, 0, r, 0),
+		dvertex(r, -r, 0, 0, 0, -r, r, 0, 0, r, r),
 	};
 	uint i[] =
 	{
@@ -143,6 +144,8 @@ public:
 };
 
 
+
+
 class df_lijjio_app : public dx_app, public render_shader
 {
 	vector<game_object*> gameobjects;
@@ -152,16 +155,20 @@ class df_lijjio_app : public dx_app, public render_shader
 	shader normals_shader;
 	shader diffuse_shader;
 	shader positions_shader;
+	shader spec_shader;
 
 	shader* current_shader;
 
 	render_texture normals_buffer;
 	render_texture diffuse_buffer;
 	render_texture positions_buffer;
+	render_texture spec_buffer;
 
 	shader pntlight_shader;
 
 	mesh* quad;
+
+	deferred_renderer* dr;
 
 
 	struct model_dep
@@ -267,7 +274,7 @@ public:
 public:
 	df_lijjio_app()
 		: dx_app(4, true),
-		cam(float3(0, 4, -5), float3(0, 0.1f, 0), 0.1f, 1000.f, to_radians(45.f))
+		cam(float3(0, 15, 0.1f), float3(0, 0.1f, 0), 0.1f, 1000.f, to_radians(45.f))
 	{
 		this->clear_color = float4(0, 0, 0, 1);
 	}
@@ -287,10 +294,30 @@ public:
 		grnd = model(mesh::create_grid(device, 16, 16, 4, 4));
 		*/
 
-		gameobjects.push_back(new game_object(new model(mesh::create_sphere(device, 1.f, 32, 32)), new texture2d(device, read_data_from_package(L"stone.dds")), float3(0, 2, 0)));
-		gameobjects.push_back(new game_object(new model(mesh::create_grid(device, 16, 16, 4, 4)), new texture2d(device, read_data_from_package(L"floor.dds")), float3(), float3(), float3(1),
-			basic_material(float4(.8f, .8f, .8f, 1), float3(.8f, .8f, .8f), 32, float3(.2f, .2f, .2f), false)));
+		gameobjects.push_back(new game_object(new model(mesh::create_sphere(device, 1.f, 32, 32)), 
+			new texture2d(device, read_data_from_package(L"stone.dds")), 
+			float3(0, 1.5f, 0), float3(), float3(1), 
+			basic_material(float4(.8f, .8f, .8f, 1), float3(.8f, .8f, .8f), 16, 
+				float3(.2f, .2f, .2f), false)));
+		gameobjects.push_back(new game_object(new model(mesh::create_grid(device, 64, 64, 4, 4)), 
+			new texture2d(device, read_data_from_package(L"floor.dds")), float3(), float3(), float3(1)));
 		
+		auto crate_model = new model(mesh::create_box(device, 1.f, 1.f, 1.f));
+		auto crate_texture = new texture2d(device, read_data_from_package(L"crate.dds"));/*
+		gameobjects.push_back(new game_object(crate_model, crate_texture, float3(3, .5f, -3)));
+		gameobjects.push_back(new game_object(crate_model, crate_texture, float3(4, .5f, -3)));
+		gameobjects.push_back(new game_object(crate_model, crate_texture, float3(3.5f, 1.5f, -3)));*/
+
+		for (float y = 0; y < 5; ++y)
+		{
+			float vx = (5.f - y)*.5f;
+			for (float x = -vx; x < vx; ++x)
+			{
+				gameobjects.push_back(new game_object(crate_model, crate_texture, float3(x, y + .5f, -3)));
+			}
+		}
+		
+
 		auto basic_vs_data = read_data_from_package(L"basic_vs.cso");
 		normals_shader = shader(device, basic_vs_data, read_data_from_package(L"dr_normals_ps.cso"), posnormtex_layout, _countof(posnormtex_layout));
 		normals_buffer = render_texture(device, float2(windowBounds.width, windowBounds.height));
@@ -298,16 +325,36 @@ public:
 		diffuse_buffer = render_texture(device, float2(windowBounds.width, windowBounds.height));
 		positions_shader = shader(device, basic_vs_data, read_data_from_package(L"dr_positions_ps.cso"), posnormtex_layout, _countof(posnormtex_layout));
 		positions_buffer = render_texture(device, float2(windowBounds.width, windowBounds.height));
+		spec_shader = shader(device, basic_vs_data, read_data_from_package(L"dr_spec_ps.cso"), posnormtex_layout, _countof(posnormtex_layout));
+		spec_buffer = render_texture(device, float2(windowBounds.width, windowBounds.height));
 
 		model_depcb = constant_buffer<model_dep>(device, 0, model_dep());
 		cam_depcb = constant_buffer<cam_dep>(device, 1, cam_dep());
 		obj_cb = constant_buffer<object_cb>(device, 1, object_cb());
 		samp = sampler_state(device, 0);
 
+		dr = new deferred_renderer(device, 
+			deferred_renderer::draw_scene_func([&](ComPtr<ID3D11DeviceContext> ctx, render_shader& s) { this->draw_scene_dr(ctx, s); }), //strange hack around issue with STL
+			vector<deferred_renderer::renderpass>({
+				deferred_renderer::renderpass(
+					new shader(device, basic_vs_data, read_data_from_package(L"dr_diffuse_ps.cso"), posnormtex_layout, _countof(posnormtex_layout)), 
+					new render_texture(device, float2(windowBounds.width, windowBounds.height))),
+				deferred_renderer::renderpass(
+					new shader(device, basic_vs_data, read_data_from_package(L"dr_positions_ps.cso"), posnormtex_layout, _countof(posnormtex_layout)),
+					new render_texture(device, float2(windowBounds.width, windowBounds.height))),
+				deferred_renderer::renderpass(
+					new shader(device, basic_vs_data, read_data_from_package(L"dr_normals_ps.cso"), posnormtex_layout, _countof(posnormtex_layout)),
+					new render_texture(device, float2(windowBounds.width, windowBounds.height))),
+				deferred_renderer::renderpass(
+					new shader(device, basic_vs_data, read_data_from_package(L"dr_spec_ps.cso"), posnormtex_layout, _countof(posnormtex_layout)),
+					new render_texture(device, float2(windowBounds.width, windowBounds.height))),
+			})
+		);
+
 		pntlight_shader = shader(device, read_data_from_package(L"ndc_vs.cso"), read_data_from_package(L"dr_pointlight_ps.cso"), posnormtex_layout, _countof(posnormtex_layout));
 		light_cb = constant_buffer<point_light>(device, 2, point_light());
-		light_cb.data().pos = float4(0, 5, 0, 20);
-		light_cb.data().col = float4(.8f);
+		light_cb.data().pos = float4(0, 5, 0, .005f);
+		light_cb.data().col = float4(1.f);
 		light_cb.update(context);
 		quad = create_ndc_quad(device);
 	}
@@ -317,11 +364,37 @@ public:
 		if (windowSizeChanged)
 		{
 			cam.update_proj(windowBounds.width / windowBounds.height);
-			proj(cam.proj());
+			delete dr;
+			auto basic_vs_data = read_data_from_package(L"basic_vs.cso");
+			dr = new deferred_renderer(device,
+				deferred_renderer::draw_scene_func([&](ComPtr<ID3D11DeviceContext> ctx, render_shader& s) { this->draw_scene_dr(ctx, s); }), //strange hack around issue with STL
+				vector<deferred_renderer::renderpass>({
+				deferred_renderer::renderpass(
+				new shader(device, basic_vs_data, read_data_from_package(L"dr_diffuse_ps.cso"), posnormtex_layout, _countof(posnormtex_layout)),
+				new render_texture(device, float2(windowBounds.width, windowBounds.height))),
+				deferred_renderer::renderpass(
+				new shader(device, basic_vs_data, read_data_from_package(L"dr_positions_ps.cso"), posnormtex_layout, _countof(posnormtex_layout)),
+				new render_texture(device, float2(windowBounds.width, windowBounds.height))),
+				deferred_renderer::renderpass(
+				new shader(device, basic_vs_data, read_data_from_package(L"dr_normals_ps.cso"), posnormtex_layout, _countof(posnormtex_layout)),
+				new render_texture(device, float2(windowBounds.width, windowBounds.height))),
+				deferred_renderer::renderpass(
+				new shader(device, basic_vs_data, read_data_from_package(L"dr_spec_ps.cso"), posnormtex_layout, _countof(posnormtex_layout)),
+				new render_texture(device, float2(windowBounds.width, windowBounds.height))),
+			})
+			);
+			dr->proj(cam.proj());
 			windowSizeChanged = false;
 		}
 
-		const float spd = 2.75f;
+		static float ka = .005f;
+		if (keyboard::key_down('Y')) ka += .0001f;
+		if (keyboard::key_down('H')) ka -= .0001f;
+
+		light_cb.data().pos = float4(0, 5, 0, ka);
+		light_cb.update(context);
+
+		const float spd = 5.f;
 		if (keyboard::key_down('A'))
 			cam.strafe(-spd*dt);
 		else if (keyboard::key_down('D'))
@@ -346,12 +419,12 @@ public:
 			cam.pitch(d);
 
 		cam.update_view();
-		camera_position(cam.position());
-		view(cam.view());
+		dr->camera_position(cam.position());
+		dr->view(cam.view());
 
 		gameobjects[0]->position().x = sinf(-t) * 2;
 		gameobjects[0]->position().z = cosf(t) * 2;
-
+		
 		for (auto& g : gameobjects)
 			g->update(t, dt);
 	}
@@ -366,10 +439,23 @@ public:
 		unbind(context);
 	}
 
+	void draw_scene_dr(ComPtr<ID3D11DeviceContext> ctx, render_shader& rs)
+	{
+		rs.bind(ctx);
+
+		for (auto& g : gameobjects)
+			g->draw(ctx, rs);
+
+		rs.unbind(ctx);
+	}
+
 	void render(float t, float dt) override
 	{
 		dx_app::render(t, dt);
-		diffuse_buffer.push(this);
+
+		dr->render(context, this);
+
+		/*diffuse_buffer.push(this);
 		current_shader = &diffuse_shader;
 		draw_scene();
 		pop_render_target();
@@ -384,20 +470,46 @@ public:
 		draw_scene();
 		pop_render_target();
 
-		current_shader = &pntlight_shader;
-		bind(context);
+		spec_buffer.push(this);
+		current_shader = &spec_shader;
+		draw_scene();
+		pop_render_target();*/
+
+		dr->current_shader() = &pntlight_shader;
+		dr->bind(context);
+
+		dr->update(context);
+
 		light_cb.bind(context, shader_stage::Pixel);
-		diffuse_buffer.bind(context, shader_stage::Pixel, 0);
+
+		int i = 0;
+		for (auto& rp : dr->render_passes())
+		{
+			rp.rt->bind(context, shader_stage::Pixel, i);
+			i++;
+		}
+
+		/*diffuse_buffer.bind(context, shader_stage::Pixel, 0);
 		positions_buffer.bind(context, shader_stage::Pixel, 1);
 		normals_buffer.bind(context, shader_stage::Pixel, 2);
+		spec_buffer.bind(context, shader_stage::Pixel, 3);*/
 
 		quad->draw(context);
 		
-		diffuse_buffer.unbind(context, shader_stage::Pixel, 0);
+		/*diffuse_buffer.unbind(context, shader_stage::Pixel, 0);
 		positions_buffer.unbind(context, shader_stage::Pixel, 1);
 		normals_buffer.unbind(context, shader_stage::Pixel, 2);
+		spec_buffer.unbind(context, shader_stage::Pixel, 3);*/
+
+		i = 0;
+		for (auto& rp : dr->render_passes())
+		{
+			rp.rt->unbind(context, shader_stage::Pixel, i);
+			i++;
+		}
+
 		pntlight_shader.unbind(context);
 		light_cb.unbind(context, shader_stage::Pixel);
-		unbind(context);
+		dr->unbind(context);
 	}
 };

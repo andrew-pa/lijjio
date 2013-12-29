@@ -41,6 +41,9 @@
     <ClInclude Include="df_lijjio_app.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="deferred_renderer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="basic_ps.hlsl">
@@ -64,9 +67,11 @@
     <FxCompile Include="dr_pointlight_ps.hlsl">
       <Filter>Source Files\Shaders</Filter>
     </FxCompile>
+    <FxCompile Include="dr_spec_ps.hlsl">
+      <Filter>Source Files\Shaders</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="sphere.obj" />
     <CustomBuild Include="cube.obj" />
   </ItemGroup>
 </Project>
