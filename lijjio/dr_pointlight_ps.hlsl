@@ -62,27 +62,34 @@ float4 shade(float2 tc)
 			color += sf * sp.yzw * pl.col;
 		}
 	}
-	return float4(color*a, 1);
+	return float4(color*a, 0.5f);
+}
+
+static unsigned int next = 1;
+int rand(void) // RAND_MAX assumed to be 32767
+{
+	next = next * 1103515245 + 12345;
+	return (unsigned int)(next);
 }
 
 float4 main(ps_in i) : SV_TARGET
 {
-	//shade(i.texc);
+	return shade((i.pos.xy / float2(1280, 960))); //need to parameterize screen size
 	
-	if (i.texc.y < 0.25f)
-	{
-		if (i.texc.x < 0.25f)
-			return diffuse_buffer.Sample(smp, i.texc*4.f);
-		else if (i.texc.x > 0.25f && i.texc.x < 0.50f)
-			return positions_buffer.Sample(smp, i.texc*4.f);
-		else if (i.texc.x > .5f && i.texc.x < .75f)
-			return normals_buffer.Sample(smp, i.texc*4.f);
-		else
-			return spec_buffer.Sample(smp, i.texc*4.f);
-	}
-	else
-	{
-		return shade(i.texc);
-	}
+	//if (i.texc.y < 0.25f)
+	//{
+	//	if (i.texc.x < 0.25f)
+	//		return diffuse_buffer.Sample(smp, i.texc*4.f);
+	//	else if (i.texc.x > 0.25f && i.texc.x < 0.50f)
+	//		return positions_buffer.Sample(smp, i.texc*4.f);
+	//	else if (i.texc.x > .5f && i.texc.x < .75f)
+	//		return normals_buffer.Sample(smp, i.texc*4.f);
+	//	else
+	//		return spec_buffer.Sample(smp, i.texc*4.f);
+	//}
+	//else
+	//{
+	//	return shade(i.texc);
+	//}
 		
 }
