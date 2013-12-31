@@ -153,6 +153,8 @@ class df_lijjio_app : public dx_app
 
 	shader pntlight_shader;
 	constant_buffer<point_light> light_cb;
+
+	shader null_shader;
 	
 	vector<point_light> lights;
 
@@ -163,6 +165,9 @@ class df_lijjio_app : public dx_app
 	blend_state bls;
 	rasterizer_state rsl;
 
+	ComPtr<ID3D11DepthStencilState> stencil_write_rps;
+	ComPtr<ID3D11DepthStencilState> stencil_read_rps;
+
 	float sizeof_light_sphere(float x)
 	{
 		//unfortanatly, i couldn't find a equasion, so good ol' aproximation / a loop go through all posable values
@@ -172,7 +177,7 @@ class df_lijjio_app : public dx_app
 		{
 			d += 0.01f;
 			a = (1 / (x*(d*d)));
-		} while (fabsf(a) > 0.1f);
+		} while (fabsf(a) > 0.03f);
 		return d;
 	}
 public:
@@ -270,16 +275,26 @@ public:
 		light_cb.data().col = float4(1.f);
 		light_cb.update(context);
 
+		null_shader = shader(device, basic_vs_data, nullptr, posnormtex_layout, _countof(posnormtex_layout));
+
 		lights.push_back(point_light(float4(0, 5, 0, .005f), float4(1.f)));
 		lights.push_back(point_light(float4(0, 2, 0, .03f),  float4(0.8f, .8f, .4f, 1.f)));
-		for (int i = 0; i < 5; ++i)
-			lights.push_back(point_light(float4(randfn()*32, 5, randfn()*32, .08f), float4(0.7f)));
+		for (int i = 0; i < 10; ++i)
+			lights.push_back(point_light(float4(randfn()*30, 5, randfn()*30, .08f), float4(0.7f)));
 			
 
 		bls = blend_state(device, true, D3D11_BLEND_ONE, D3D11_BLEND_ONE, D3D11_BLEND_OP_ADD);
 		rsl = rasterizer_state(device, D3D11_FILL_SOLID, D3D11_CULL_FRONT);
 
-		light_sphere = mesh::create_sphere(device, 1.2f, 8, 8);//create_ndc_quad(device);
+		CD3D11_DEPTH_STENCIL_DESC rdsdec(false, D3D11_DEPTH_WRITE_MASK_ALL, D3D11_COMPARISON_LESS,
+			false, D3D11_DEFAULT_STENCIL_READ_MASK, D3D11_DEFAULT_STENCIL_WRITE_MASK,
+			D3D11_STENCIL_OP_KEEP, D3D11_STENCIL_OP_KEEP, D3D11_STENCIL_OP_KEEP, D3D11_COMPARISON_ALWAYS, //front
+			D3D11_STENCIL_OP_KEEP, D3D11_STENCIL_OP_KEEP, D3D11_STENCIL_OP_KEEP, D3D11_COMPARISON_ALWAYS  //back
+			);
+
+		device->CreateDepthStencilState(&rdsdec, stencil_read_rps.GetAddressOf());
+
+		light_sphere = mesh::create_sphere(device, 1.2f, 6, 6);//create_ndc_quad(device);
 	}
 
 	void update(float t, float dt) override
@@ -406,68 +421,44 @@ public:
 	{
 		dx_app::render(t, dt);
 
-		dr->render(context, this);
+		ComPtr<ID3DUserDefinedAnnotation> uda;
+		context.As(&uda);
 
-		bls.om_bind(context);
-		rsl.bind(context);
+		uda->BeginEvent(L"Render to G Buffer");
+		context->OMSetDepthStencilState(nullptr, 0);
+		dr->render(context, this);
+		uda->EndEvent();
+
+		//uda->BeginEvent(L"Render to lights to stencil buf");
+		//dr->current_shader() = &null_shader;
+		//dr->bind(context);
+		//context->OMSetDepthStencilState(stencil_write_rps.Get(), 0);
+		//for (auto pl : lights)
+		//{
+		//	float s = sizeof_light_sphere(pl.pos.w);
+		//	dr->world(XMMatrixScaling(s, s, s) * XMMatrixTranslationFromVector(pl.pos));
+		//	dr->update(context);
+
+		//	light_cb.data() = pl;
+		//	light_cb.update(context);
+
+		//	light_sphere->draw(context);
+		//}
+		//uda->EndEvent();
+
+		uda->BeginEvent(L"Render lights to framebuffer");
 		dr->current_shader() = &pntlight_shader;
 		dr->bind(context);
+		bls.om_bind(context);
+		rsl.bind(context);
+		context->OMSetDepthStencilState(stencil_read_rps.Get(), 0);
 
 		light_cb.bind(context, shader_stage::Pixel);
 		for (auto l : lights)
+		{
 			render_point_light(l);
-
-		//float s = sizeof_light_sphere(0.005f);
-		//dr->world(XMMatrixScaling(s, s, s) * XMMatrixTranslationFromVector(float3(0, 5, 0)));
-		//dr->update(context);
-
-		//light_cb.data().pos = float4(0, 5, 0, .005f);
-		//light_cb.data().col = float4(1.f);
-		//light_cb.update(context);
-
-		// i = 0;
-		//for (auto& rp : dr->render_passes())
-		//{
-		//	rp.rt->bind(context, shader_stage::Pixel, i);
-		//	i++;
-		//}
-
-		//light_sphere->draw(context);
-
-		//i = 0;
-		//for (auto& rp : dr->render_passes())
-		//{
-		//	rp.rt->unbind(context, shader_stage::Pixel, i);
-		//	i++;
-		//}
-
-
-
-
-
-		//float s = sizeof_light_sphere(0.03f);
-		//dr->world(XMMatrixScaling(s, s, s) * XMMatrixTranslationFromVector(float3(light_pos.x, 2, light_pos.y)));
-		//dr->update(context);
-
-		//light_cb.data().pos = float4(light_pos.x, 2, light_pos.y, .03f);
-		//light_cb.data().col = float4(.8f, .8f, .4f, 0.f);
-		//light_cb.update(context);
-
-		//i = 0;
-		//for (auto& rp : dr->render_passes())
-		//{
-		//	rp.rt->bind(context, shader_stage::Pixel, i);
-		//	i++;
-		//}
-
-		//light_sphere->draw(context);
-
-		//i = 0;
-		//for (auto& rp : dr->render_passes())
-		//{
-		//	rp.rt->unbind(context, shader_stage::Pixel, i);
-		//	i++;
-		//}
+		}
+		uda->EndEvent();
 
 		pntlight_shader.unbind(context);
 		light_cb.unbind(context, shader_stage::Pixel);

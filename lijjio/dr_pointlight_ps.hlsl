@@ -66,17 +66,10 @@ float4 shade(float2 tc)
 	return float4(a*color, 0.5f);
 }
 
-static unsigned int next = 1;
-int rand(void) // RAND_MAX assumed to be 32767
-{
-	next = next * 1103515245 + 12345;
-	return (unsigned int)(next);
-}
-
 float4 main(ps_in i) : SV_TARGET
 {
 	//return float4(i.texc, 0, 1);
-	return shade(i.pos.xy / float2(1280, 960)); //need to parameterize screen size
+	return shade(i.pos.xy / float2(1280, 960))/* + float4(0.01f, .01f, .01f, 0)*/; //need to parameterize screen size
 	/*
 	if (i.texc.y < 0.25f)
 	{
