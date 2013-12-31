@@ -33,6 +33,11 @@ struct point_light
 {
 	float4 pos;
 	float4 col;
+	point_light() { }
+	point_light(float4 p, float4 c)
+		: pos(p), col(c)
+	{
+	}
 };
 
 struct dir_light
