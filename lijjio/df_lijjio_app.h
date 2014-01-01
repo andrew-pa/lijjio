@@ -187,6 +187,7 @@ public:
 
 	void load() override
 	{
+
 		/*bo_file knot_mesh(read_data_from_package(L"cube.bo"));
 		auto tkd = knot_mesh["Cube"];
 		void* vertices = tkd.data + 2;

@@ -75,12 +75,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="bo_file.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="basic_shader.h" />
-    <ClInclude Include="bo_file.h" />
     <ClInclude Include="deferred_renderer.h" />
     <ClInclude Include="df_lijjio_app.h" />
     <ClInclude Include="game_object.h" />

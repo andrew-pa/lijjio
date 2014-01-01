@@ -21,14 +21,8 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="bo_file.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="bo_file.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="basic_shader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
