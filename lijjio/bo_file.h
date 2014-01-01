@@ -6,10 +6,10 @@ using namespace aldx;
 // entry in a BO file
 struct bo_entry
 {
-	_strange_datablob<uint32> data;
+	datablob<uint32> data;
 	uint type;
 	string name;
-	bo_entry(_strange_datablob<uint32> _data, uint _type, const string& _name)
+	bo_entry(datablob<uint32> _data, uint _type, const string& _name)
 		: data(_data), type(_type), name(_name){}
 	bo_entry(uint32* d, uint32 l, uint _t, const string& n)
 		: data(new uint32[l], l), type(_t), name(n) 
@@ -27,9 +27,10 @@ protected:
 public:
 	bo_file(uint t)
 		: _entries() {}
+	//loads BO from the data in data. you can delete data when it finishes
 	bo_file(datablob<byte>* data);
 
-	inline _strange_datablob<uint32>& operator[](const string& name)
+	inline datablob<uint32>& operator[](const string& name)
 	{
 		auto v = find_if(_entries.begin(), _entries.end(), [&](bo_entry b) 
 		{
@@ -40,7 +41,7 @@ public:
 		else
 			throw exception(("can't find " + name + " in file").c_str());
 	}
-	inline const _strange_datablob<uint32>& operator[](const string& name) const
+	inline const datablob<uint32>& operator[](const string& name) const
 	{
 		auto v = find_if(_entries.begin(), _entries.end(), [&](bo_entry b) 
 		{

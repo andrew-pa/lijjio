@@ -7,12 +7,11 @@
 #include <constant_buffer.h>
 #include <mesh.h>
 #include <model.h>
-#include <bofile.h>
 #include <camera.h>
 #include <texture2d.h>
 #include <states.h>
 #include <render_texture.h>
-//#include "bo_file.h"
+#include "bo_file.h"
 using namespace aldx;
 
 #include "basic_shader.h"
@@ -153,8 +152,6 @@ class df_lijjio_app : public dx_app
 
 	shader pntlight_shader;
 	constant_buffer<point_light> light_cb;
-
-	shader null_shader;
 	
 	vector<point_light> lights;
 
@@ -164,8 +161,6 @@ class df_lijjio_app : public dx_app
 
 	blend_state bls;
 	rasterizer_state rsl;
-
-	ComPtr<ID3D11DepthStencilState> stencil_write_rps;
 	ComPtr<ID3D11DepthStencilState> stencil_read_rps;
 
 	float sizeof_light_sphere(float x)
@@ -186,6 +181,7 @@ public:
 		cam(float3(0, 50, 0.1f), float3(0, 0.1f, 0), 0.1f, 1000.f, to_radians(45.f))
 	{
 		this->clear_color = float4(0, 0, 0, 1);
+		
 	}
 
 	void load() override
@@ -275,11 +271,9 @@ public:
 		light_cb.data().col = float4(1.f);
 		light_cb.update(context);
 
-		null_shader = shader(device, basic_vs_data, nullptr, posnormtex_layout, _countof(posnormtex_layout));
-
 		lights.push_back(point_light(float4(0, 5, 0, .005f), float4(1.f)));
 		lights.push_back(point_light(float4(0, 2, 0, .03f),  float4(0.8f, .8f, .4f, 1.f)));
-		for (int i = 0; i < 10; ++i)
+		for (int i = 0; i < 40; ++i)
 			lights.push_back(point_light(float4(randfn()*30, 5, randfn()*30, .08f), float4(0.7f)));
 			
 

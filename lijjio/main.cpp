@@ -6,7 +6,6 @@
 #include "st_lijjio_app.h"
 #include "df_lijjio_app.h"
 
-
 int CALLBACK WinMain(
 	_In_  HINSTANCE inst,
 	_In_  HINSTANCE pinst,
@@ -14,6 +13,7 @@ int CALLBACK WinMain(
 	_In_  int cmds
 	)
 {
+
 #ifdef ST
 	st_lijjio_app app;
 #elif defined(DF)
