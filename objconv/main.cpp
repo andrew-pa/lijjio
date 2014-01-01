@@ -1,7 +1,7 @@
 #include <helper.h>
 
 
-#define OLD_BO
+//#define OLD_BO
 #ifndef OLD_BO
 #include "../lijjio/bo_file.h"
 #else
@@ -54,6 +54,15 @@ struct mesh
 
 int main(int argc, char* argv[])
 {
+	bo_file f = bo_file();
+	char* data = new char[2 * sizeof(uint32)];
+	for (int i = 0; i < 7; ++i)
+		data[i] = 65 + (char)i;
+	data[7] = '\0';
+	f.entries().push_back(bo_entry((uint32*)data, 2, 24, "hello_data"));
+	f.save("hello.bo");
+	return 5125;
+
 	if (argc < 3)
 	{
 		cout << "objconv usage: " << endl;
@@ -190,14 +199,14 @@ int main(int argc, char* argv[])
 	}
 #else
 
-	bo_file bf{ 8 };
-	for (auto o : objects)
-	{
-		bf.entries().push_back(bo_entry(
-			(uint32*)o.second.mesb_rep(), o.second.size(),
-			0, o.first));
-	}
-	bf.save(argv[2]);
+	//bo_file bf{ 8 };
+	//for (auto o : objects)
+	//{
+	//	bf.entries().push_back(bo_entry(
+	//		(uint32*)o.second.mesb_rep(), o.second.size(),
+	//		0, o.first));
+	//}
+	//bf.save(argv[2]);
 	return 0;
 #endif
 }

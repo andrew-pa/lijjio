@@ -29,6 +29,12 @@ cbuffer lighting : register (b2)
 	point_light pl;
 }
 
+cbuffer stuff : register (b3)
+{
+	float2 screen_size;
+	float2 extra;
+}
+
 Texture2D diffuse_buffer : register(t0);
 Texture2D positions_buffer : register(t1);
 Texture2D normals_buffer : register(t2);
@@ -69,7 +75,7 @@ float4 shade(float2 tc)
 float4 main(ps_in i) : SV_TARGET
 {
 	//return float4(i.texc, 0, 1);
-	return shade(i.pos.xy / float2(1280, 960))/* + float4(0.01f, .01f, .01f, 0)*/; //need to parameterize screen size
+	return shade(i.pos.xy / screen_size)/* + float4(0.01f, .01f, .01f, 0)*/; //need to parameterize screen size
 	/*
 	if (i.texc.y < 0.25f)
 	{

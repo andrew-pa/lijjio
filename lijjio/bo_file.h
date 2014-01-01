@@ -25,7 +25,7 @@ class bo_file
 protected:
 	vector<bo_entry> _entries;
 public:
-	bo_file(uint t)
+	bo_file()
 		: _entries() {}
 	//loads BO from the data in data. you can delete data when it finishes
 	bo_file(datablob<byte>* data);

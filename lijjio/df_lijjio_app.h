@@ -152,6 +152,7 @@ class df_lijjio_app : public dx_app
 
 	shader pntlight_shader;
 	constant_buffer<point_light> light_cb;
+	constant_buffer<float4> stuff_cb;
 	
 	vector<point_light> lights;
 
@@ -271,9 +272,12 @@ public:
 		light_cb.data().col = float4(1.f);
 		light_cb.update(context);
 
+		stuff_cb = constant_buffer<float4>(device, 3, float4(windowBounds.width, windowBounds.height,0,0));
+		stuff_cb.update(context);
+
 		lights.push_back(point_light(float4(0, 5, 0, .005f), float4(1.f)));
 		lights.push_back(point_light(float4(0, 2, 0, .03f),  float4(0.8f, .8f, .4f, 1.f)));
-		for (int i = 0; i < 40; ++i)
+		for (int i = 0; i < 5; ++i)
 			lights.push_back(point_light(float4(randfn()*30, 5, randfn()*30, .08f), float4(0.7f)));
 			
 
@@ -316,6 +320,8 @@ public:
 			})
 			);
 			dr->proj(cam.proj());
+			stuff_cb.data() = float4(windowBounds.width, windowBounds.height,0,0);
+			stuff_cb.update(context);
 			windowSizeChanged = false;
 		}
 
@@ -448,6 +454,7 @@ public:
 		context->OMSetDepthStencilState(stencil_read_rps.Get(), 0);
 
 		light_cb.bind(context, shader_stage::Pixel);
+		stuff_cb.bind(context, shader_stage::Pixel);
 		for (auto l : lights)
 		{
 			render_point_light(l);
@@ -456,6 +463,7 @@ public:
 
 		pntlight_shader.unbind(context);
 		light_cb.unbind(context, shader_stage::Pixel);
+		stuff_cb.unbind(context, shader_stage::Pixel);
 		bls.om_unbind(context);
 		rsl.unbind(context);
 		dr->unbind(context);

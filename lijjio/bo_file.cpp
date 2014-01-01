@@ -28,13 +28,13 @@ bo_file::bo_file(datablob<byte>* data)
 void bo_file::save(const string& filename)
 {
 	//size in bytes!
-	size_t size = 1 + _entries.size()*sizeof(bo_header_entry);
+	size_t size = sizeof(uint32) + _entries.size()*sizeof(bo_header_entry);
 	for (auto& e : _entries)
 		size += e.data.length*sizeof(uint32);
-	uint32* dat = new uint32[size / sizeof(uint32)];
-	dat[0] = _entries.size(); //write entry count
-	uint32* data_ptr = dat + 1 + ((_entries.size() * sizeof(bo_header_entry)) / sizeof(uint32));
-	bo_header_entry* her = (bo_header_entry*)(dat + 1);
+	byte* dat = new byte[size];
+	((uint32*)dat)[0] = _entries.size(); //write entry count
+	byte* data_ptr = dat + sizeof(uint32) + (_entries.size() * sizeof(bo_header_entry));
+	bo_header_entry* her = (bo_header_entry*)(dat + sizeof(uint32));
 	int i = 0;
 	uint32 dofs = 0;
 	for (auto& e : _entries)
@@ -48,7 +48,7 @@ void bo_file::save(const string& filename)
 		dofs += her[i].size;
 	}
 	FILE* f = fopen(filename.c_str(), "wb");
-	fwrite(dat, sizeof(byte), size, f);
+	fwrite(dat, sizeof(byte), size, stdout);
 	fclose(f);
 	delete[] dat;
 }
