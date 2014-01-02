@@ -17,6 +17,7 @@ using namespace aldx;
 #include "basic_shader.h"
 #include "game_object.h"
 #include "deferred_renderer.h"
+#include "mesh_load_from_obj.h"
 
 mesh* create_ndc_quad(ComPtr<ID3D11Device> device, float r = 1.0f, float z = 0.f)
 {
@@ -187,7 +188,6 @@ public:
 
 	void load() override
 	{
-
 		/*bo_file knot_mesh(read_data_from_package(L"cube.bo"));
 		auto tkd = knot_mesh["Cube"];
 		void* vertices = tkd.data + 2;
@@ -246,6 +246,8 @@ public:
 				gameobjects.push_back(new game_object(crate_model, crate_texture, float3(x - 16, y + .5f, 20)));
 			}
 		}
+
+		gameobjects.push_back(new game_object(new model(device, load_bo(read_data_from_package(L"tknot.bo"))) /*model_load_from_obj(device, "C:\\Users\\Andrew\\Source\\lijjio\\Debug\\mesh.obj")*/, crate_texture, float3(7, 1, 7)));
 
 		auto basic_vs_data = read_data_from_package(L"basic_vs.cso");
 

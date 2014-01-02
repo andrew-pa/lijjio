@@ -5,6 +5,8 @@ VisualStudioVersion = 12.0.21005.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "lijjio", "lijjio\lijjio.vcxproj", "{C5EA7D52-12F6-4DD5-8BED-F9033178E1A1}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "obj2bo", "obj2bo\obj2bo.vcxproj", "{5828A868-52FE-4DBF-8F61-384211135FD9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -15,6 +17,10 @@ Global
 		{C5EA7D52-12F6-4DD5-8BED-F9033178E1A1}.Debug|Win32.Build.0 = Debug|Win32
 		{C5EA7D52-12F6-4DD5-8BED-F9033178E1A1}.Release|Win32.ActiveCfg = Release|Win32
 		{C5EA7D52-12F6-4DD5-8BED-F9033178E1A1}.Release|Win32.Build.0 = Release|Win32
+		{5828A868-52FE-4DBF-8F61-384211135FD9}.Debug|Win32.ActiveCfg = Debug|Win32
+		{5828A868-52FE-4DBF-8F61-384211135FD9}.Debug|Win32.Build.0 = Debug|Win32
+		{5828A868-52FE-4DBF-8F61-384211135FD9}.Release|Win32.ActiveCfg = Release|Win32
+		{5828A868-52FE-4DBF-8F61-384211135FD9}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
