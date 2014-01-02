@@ -136,11 +136,21 @@
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="cube.obj">
-      <DeploymentContent>true</DeploymentContent>
+    <CustomBuild Include="Media\*.obj">
       <FileType>Document</FileType>
-      <Command>objconv "C:\Users\Andrew\Source\lijjio\lijjio\cube.obj" "C:\Users\Andrew\Source\lijjio\Debug\cube.bo"</Command>
-      <Outputs>C:\Users\Andrew\Source\lijjio\Debug\cube.bo</Outputs>
+      <Command>obj2bo.exe "%(FullPath)" "$(TargetDir)%(Filename).bo"</Command>
+      <Message>OBJ -&gt; BO %(Filename)</Message>
+      <Outputs>$(TargetDir)\%(Filename).bo</Outputs>
+      <LinkObjects>false</LinkObjects>
+      <TreatOutputAsContent>true</TreatOutputAsContent>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="Media\*.dds">
+      <FileType>Document</FileType>
+      <Command>cp "%(FullPath)" "$(TargetDir)%(Filename).dds"</Command>
+      <Message>Copying %(Filename).dds</Message>
+      <Outputs>$(TargetDir)\%(Filename).dds</Outputs>
       <LinkObjects>false</LinkObjects>
       <TreatOutputAsContent>true</TreatOutputAsContent>
     </CustomBuild>

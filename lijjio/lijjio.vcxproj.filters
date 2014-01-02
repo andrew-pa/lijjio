@@ -16,6 +16,9 @@
     <Filter Include="Source Files\Shaders">
       <UniqueIdentifier>{c360a7ec-7b50-494e-a052-59a8ddd624e6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Media">
+      <UniqueIdentifier>{2f9c11e5-0324-4b8d-9213-02bb48d1d6c8}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -72,6 +75,29 @@
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="cube.obj" />
+    <CustomBuild Include="Media\floor.dds" />
+    <CustomBuild Include="Media\stone.dds" />
+    <CustomBuild Include="Media\floor.dds" />
+    <CustomBuild Include="Media\stone.dds" />
+    <CustomBuild Include="Media\floor.dds" />
+    <CustomBuild Include="Media\stone.dds" />
+    <CustomBuild Include="Media\crate.dds">
+      <Filter>Media</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Media\floor.dds" />
+    <CustomBuild Include="Media\stone.dds" />
+    <CustomBuild Include="Media\crate.dds">
+      <Filter>Media</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Media\floor.dds" />
+    <CustomBuild Include="Media\stone.dds" />
+    <CustomBuild Include="Media\*.obj">
+      <Filter>Media</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Media\crate.dds">
+      <Filter>Media</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Media\floor.dds" />
+    <CustomBuild Include="Media\stone.dds" />
   </ItemGroup>
 </Project>
