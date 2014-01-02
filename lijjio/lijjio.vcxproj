@@ -148,7 +148,7 @@
   <ItemGroup>
     <CustomBuild Include="Media\*.dds">
       <FileType>Document</FileType>
-      <Command>cp "%(FullPath)" "$(TargetDir)%(Filename).dds"</Command>
+      <Command>copy "%(FullPath)" "$(TargetDir)%(Filename).dds"</Command>
       <Message>Copying %(Filename).dds</Message>
       <Outputs>$(TargetDir)\%(Filename).dds</Outputs>
       <LinkObjects>false</LinkObjects>

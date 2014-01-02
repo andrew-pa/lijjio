@@ -247,7 +247,7 @@ public:
 			}
 		}
 
-		gameobjects.push_back(new game_object(new model(device, load_bo(read_data_from_package(L"tknot.bo"))) /*model_load_from_obj(device, "C:\\Users\\Andrew\\Source\\lijjio\\Debug\\mesh.obj")*/, crate_texture, float3(7, 1, 7)));
+		gameobjects.push_back(new game_object(new model(device, load_bo(read_data_from_package(L"knot.bo"))) /*model_load_from_obj(device, "C:\\Users\\Andrew\\Source\\lijjio\\Debug\\mesh.obj")*/, crate_texture, float3(7, 1, 7)));
 
 		auto basic_vs_data = read_data_from_package(L"basic_vs.cso");
 
