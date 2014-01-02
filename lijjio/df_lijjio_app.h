@@ -155,7 +155,17 @@ class df_lijjio_app : public dx_app
 	constant_buffer<point_light> light_cb;
 	constant_buffer<float4> stuff_cb;
 	
-	vector<point_light> lights;
+	struct pnt_light
+	{
+		point_light pl;
+		float radius;
+		pnt_light(float3 pos, float att, float4 col)
+			: pl(float4(pos, att), col)
+		{
+			radius = sizeof_light_sphere(pl.pos.w);
+		}
+	};
+	vector<pnt_light> lights;
 
 	mesh* light_sphere;
 
@@ -165,7 +175,7 @@ class df_lijjio_app : public dx_app
 	rasterizer_state rsl;
 	ComPtr<ID3D11DepthStencilState> stencil_read_rps;
 
-	float sizeof_light_sphere(float x)
+	static float sizeof_light_sphere(float x)
 	{
 		//unfortunately, i couldn't find a equation to do this,
 		// so good ol' approximation / a loop go through all values of d
@@ -245,15 +255,12 @@ public:
 
 		pntlight_shader = shader(device, basic_vs_data /*read_data_from_package(L"ndc_vs.cso")*/, read_data_from_package(L"dr_pointlight_ps.cso"), posnormtex_layout, _countof(posnormtex_layout));
 		light_cb = constant_buffer<point_light>(device, 2, point_light());
-		light_cb.data().pos = float4(0, 5, 0, .003f);
-		light_cb.data().col = float4(1.f);
-		light_cb.update(context);
 
 		stuff_cb = constant_buffer<float4>(device, 3, float4(windowBounds.width, windowBounds.height,0,0));
 		stuff_cb.update(context);
 
-		lights.push_back(point_light(float4(8, 4, 8, .02f), float4(1.f)));
-		lights.push_back(point_light(float4(8, 4, -16, .02f), float4(1.f)));
+		lights.push_back(pnt_light(float3(8, 4, 8), .02f, float4(1.f)));
+		lights.push_back(pnt_light(float3(8, 4, -16), .02f, float4(1.f, 1.f, .9f, 1.f)));
 		/*
 		lights.push_back(point_light(float4(0, 2, 0, .03f),  float4(0.8f, .8f, .4f, 1.f)));
 		for (int i = 0; i < 5; ++i)
@@ -379,10 +386,9 @@ public:
 		rs.unbind(ctx);
 	}
 
-	void render_point_light(point_light pl)
+	void render_point_light(pnt_light pl)
 	{
-		float s = sizeof_light_sphere(pl.pos.w);
-		dr->world(XMMatrixScaling(s, s, s) * XMMatrixTranslationFromVector(pl.pos));
+		dr->world(XMMatrixScaling(pl.radius, pl.radius, pl.radius) * XMMatrixTranslationFromVector(pl.pl.pos));
 		dr->update(context);		
 		int i = 0;
 		for (auto& rp : dr->render_passes())
@@ -391,7 +397,7 @@ public:
 			i++;
 		}
 
-		light_cb.data() = pl;
+		light_cb.data() = pl.pl;
 		light_cb.update(context);
 
 		light_sphere->draw(context);		
