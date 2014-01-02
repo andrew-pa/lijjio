@@ -81,19 +81,37 @@
     <CustomBuild Include="Media\stone.dds" />
     <CustomBuild Include="Media\floor.dds" />
     <CustomBuild Include="Media\stone.dds" />
-    <CustomBuild Include="Media\crate.dds">
-      <Filter>Media</Filter>
-    </CustomBuild>
-    <CustomBuild Include="Media\floor.dds" />
-    <CustomBuild Include="Media\stone.dds" />
-    <CustomBuild Include="Media\crate.dds">
-      <Filter>Media</Filter>
-    </CustomBuild>
-    <CustomBuild Include="Media\floor.dds" />
-    <CustomBuild Include="Media\stone.dds" />
     <CustomBuild Include="Media\*.obj">
       <Filter>Media</Filter>
     </CustomBuild>
+    <CustomBuild Include="Media\crate.dds">
+      <Filter>Media</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Media\floor.dds" />
+    <CustomBuild Include="Media\stone.dds" />
+    <CustomBuild Include="Media\floor.dds" />
+    <CustomBuild Include="Media\stone.dds" />
+    <CustomBuild Include="Media\*.dds" />
+    <CustomBuild Include="Media\*.dds" />
+    <CustomBuild Include="Media\knot.obj" />
+    <CustomBuild Include="Media\floor.dds" />
+    <CustomBuild Include="Media\stone.dds" />
+    <CustomBuild Include="Media\floor.dds" />
+    <CustomBuild Include="Media\stone.dds" />
+    <CustomBuild Include="Media\crate.dds">
+      <Filter>Media</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Media\floor.dds" />
+    <CustomBuild Include="Media\stone.dds" />
+    <CustomBuild Include="Media\base.obj">
+      <Filter>Media</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Media\knot.obj" />
+    <CustomBuild Include="Media\crate.dds">
+      <Filter>Media</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Media\floor.dds" />
+    <CustomBuild Include="Media\stone.dds" />
     <CustomBuild Include="Media\crate.dds">
       <Filter>Media</Filter>
     </CustomBuild>

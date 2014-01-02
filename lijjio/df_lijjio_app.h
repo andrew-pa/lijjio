@@ -180,7 +180,7 @@ class df_lijjio_app : public dx_app
 public:
 	df_lijjio_app()
 		: dx_app(4, true),
-		cam(float3(0, 50, 0.1f), float3(0, 0.1f, 0), 0.1f, 1000.f, to_radians(45.f))
+		cam(float3(0, 0, 4.1f), float3(0, 0.1f, 0), 0.1f, 1000.f, to_radians(45.f))
 	{
 		this->clear_color = float4(0, 0, 0, 1);
 		
@@ -203,51 +203,52 @@ public:
 
 		gameobjects.push_back(new game_object(new model(mesh::create_sphere(device, 1.f, 32, 32)), 
 			new texture2d(device, read_data_from_package(L"stone.dds")), 
-			float3(0, 5.f, 0), float3(), float3(1), 
+			float3(4, -2.f, 8), float3(), float3(1), 
 			basic_material(float4(.8f, .8f, .8f, 1), float3(.8f, .8f, .8f), 16, 
 				float3(.2f, .2f, .2f), false)));
-		gameobjects.push_back(new game_object(new model(mesh::create_grid(device, 64, 64, 4, 4)), 
-			new texture2d(device, read_data_from_package(L"floor.dds")), float3(), float3(), float3(1)));
-		
-		auto crate_model = new model(mesh::create_box(device, 1.f, 1.f, 1.f));
+		//gameobjects.push_back(new game_object(new model(mesh::create_grid(device, 64, 64, 4, 4)), 
+		//	new texture2d(device, read_data_from_package(L"floor.dds")), float3(), float3(), float3(1)));
+		//
+		//auto crate_model = new model(mesh::create_box(device, 1.f, 1.f, 1.f));
 		auto crate_texture = new texture2d(device, read_data_from_package(L"crate.dds"));
 
-		for (float y = 0; y < 5; ++y)
-		{
-			float vx = (5.f - y)*.5f;
-			for (float x = -vx; x < vx; ++x)
-			{
-				gameobjects.push_back(new game_object(crate_model, crate_texture, float3(x, y + .5f, -4)));
-			}
-		}
+		//for (float y = 0; y < 5; ++y)
+		//{
+		//	float vx = (5.f - y)*.5f;
+		//	for (float x = -vx; x < vx; ++x)
+		//	{
+		//		gameobjects.push_back(new game_object(crate_model, crate_texture, float3(x, y + .5f, -4)));
+		//	}
+		//}
 
-		for (float y = 0; y < 5; ++y)
-		{
-			float vx = (5.f - y)*.5f;
-			for (float x = -vx; x < vx; ++x)
-			{
-				gameobjects.push_back(new game_object(crate_model, crate_texture, float3(x, y + .5f, 4)));
-			}
-		}
+		//for (float y = 0; y < 5; ++y)
+		//{
+		//	float vx = (5.f - y)*.5f;
+		//	for (float x = -vx; x < vx; ++x)
+		//	{
+		//		gameobjects.push_back(new game_object(crate_model, crate_texture, float3(x, y + .5f, 4)));
+		//	}
+		//}
 
-		for (float y = 0; y < 5; ++y)
-		{
-			float vx = (5.f - y)*.5f;
-			for (float x = -vx; x < vx; ++x)
-			{
-				gameobjects.push_back(new game_object(crate_model, crate_texture, float3(x+16, y + .5f, -20)));
-			}
-		}
-		for (float y = 0; y < 5; ++y)
-		{
-			float vx = (5.f - y)*.5f;
-			for (float x = -vx; x < vx; ++x)
-			{
-				gameobjects.push_back(new game_object(crate_model, crate_texture, float3(x - 16, y + .5f, 20)));
-			}
-		}
+		//for (float y = 0; y < 5; ++y)
+		//{
+		//	float vx = (5.f - y)*.5f;
+		//	for (float x = -vx; x < vx; ++x)
+		//	{
+		//		gameobjects.push_back(new game_object(crate_model, crate_texture, float3(x+16, y + .5f, -20)));
+		//	}
+		//}
+		//for (float y = 0; y < 5; ++y)
+		//{
+		//	float vx = (5.f - y)*.5f;
+		//	for (float x = -vx; x < vx; ++x)
+		//	{
+		//		gameobjects.push_back(new game_object(crate_model, crate_texture, float3(x - 16, y + .5f, 20)));
+		//	}
+		//}
 
-		gameobjects.push_back(new game_object(new model(device, load_bo(read_data_from_package(L"knot.bo"))) /*model_load_from_obj(device, "C:\\Users\\Andrew\\Source\\lijjio\\Debug\\mesh.obj")*/, crate_texture, float3(7, 1, 7)));
+		gameobjects.push_back(new game_object(new model(device, load_bo(read_data_from_package(L"base.bo"))), crate_texture, float3(7, 1, 7)));
+		gameobjects.push_back(new game_object(new model(device, load_bo(read_data_from_package(L"knot.bo"))), crate_texture, float3(4, -1.8f, -16)));
 
 		auto basic_vs_data = read_data_from_package(L"basic_vs.cso");
 
@@ -271,17 +272,19 @@ public:
 
 		pntlight_shader = shader(device, basic_vs_data /*read_data_from_package(L"ndc_vs.cso")*/, read_data_from_package(L"dr_pointlight_ps.cso"), posnormtex_layout, _countof(posnormtex_layout));
 		light_cb = constant_buffer<point_light>(device, 2, point_light());
-		light_cb.data().pos = float4(0, 5, 0, .005f);
+		light_cb.data().pos = float4(0, 5, 0, .003f);
 		light_cb.data().col = float4(1.f);
 		light_cb.update(context);
 
 		stuff_cb = constant_buffer<float4>(device, 3, float4(windowBounds.width, windowBounds.height,0,0));
 		stuff_cb.update(context);
 
-		lights.push_back(point_light(float4(0, 5, 0, .005f), float4(1.f)));
+		lights.push_back(point_light(float4(8, 0, 8, .02f), float4(1.f)));
+		lights.push_back(point_light(float4(8, 0, -16, .02f), float4(1.f)));
+		/*
 		lights.push_back(point_light(float4(0, 2, 0, .03f),  float4(0.8f, .8f, .4f, 1.f)));
 		for (int i = 0; i < 5; ++i)
-			lights.push_back(point_light(float4(randfn()*30, 5, randfn()*30, .08f), float4(0.7f)));
+			lights.push_back(point_light(float4(randfn()*30, 5, randfn()*30, .08f), float4(0.7f)));*/
 			
 
 		bls = blend_state(device, true, D3D11_BLEND_ONE, D3D11_BLEND_ONE, D3D11_BLEND_OP_ADD);
@@ -371,15 +374,17 @@ public:
 		dr->camera_position(cam.position());
 		dr->view(cam.view());
 
-		gameobjects[0]->position().x = sinf(-t) * 8;
-		gameobjects[0]->position().z = cosf(t) * 8;
+		//gameobjects[0]->position().x = sinf(-t) * 8;
+		//gameobjects[0]->position().z = cosf(t) * 8;
 
-		static float2 light_vol = float2(randfn()*.25f, randfn()*.25f);
-		light_vol = light_vol + float2(randfn(), randfn())*dt;
-		lights[1].pos.x = lights[1].pos.x + light_vol.x;
-		lights[1].pos.z = lights[1].pos.z + light_vol.y;
-		if (lights[1].pos.x < -32 || lights[1].pos.x > 32) light_vol.x = -light_vol.x;
-		if (lights[1].pos.z < -32 || lights[1].pos.z > 32) light_vol.y = -light_vol.y;
+		//static float2 light_vol = float2(randfn()*.25f, randfn()*.25f);
+		//light_vol = light_vol + float2(randfn(), randfn())*dt;
+		//lights[1].pos.x = lights[1].pos.x + light_vol.x;
+		//lights[1].pos.z = lights[1].pos.z + light_vol.y;
+		//if (lights[1].pos.x < -32 || lights[1].pos.x > 32) light_vol.x = -light_vol.x;
+		//if (lights[1].pos.z < -32 || lights[1].pos.z > 32) light_vol.y = -light_vol.y;
+
+		//lights[2].pos = float4(cam.position().x, cam.position().y, cam.position().z, 0.003f);
 		
 		for (auto& g : gameobjects)
 			g->update(t, dt);
