@@ -11,6 +11,7 @@
 #include <texture2d.h>
 #include <states.h>
 #include <render_texture.h>
+#include <render_texture_cube.h>
 #include "bo_file.h"
 using namespace aldx;
 
@@ -139,7 +140,7 @@ public:
 		model_depcb.update(context);
 		cam_depcb.update(context);
 		obj_cb.update(context);
-		if (tex) tex->bind(context, shader_stage::Pixel);
+		if (tex != nullptr) tex->bind(context, shader_stage::Pixel);
 	}
 };
 
@@ -170,6 +171,10 @@ class df_lijjio_app : public dx_app
 	mesh* light_sphere;
 
 	deferred_renderer* dr;
+
+	depth_render_texture_cube dshmap;
+	simple_shader dpthonlysh;
+	depth_render_texture camdpmap;
 
 	blend_state bls;
 	rasterizer_state rsl;
@@ -278,6 +283,8 @@ public:
 
 		device->CreateDepthStencilState(&rdsdec, stencil_read_rps.GetAddressOf());
 
+		dshmap = depth_render_texture_cube(device, 512);
+		dpthonlysh = simple_shader(device, basic_vs_data, nullptr);// read_data_from_package(L"dr_diffuse_ps.cso"));
 		light_sphere = mesh::create_sphere(device, 1.2f, 6, 6);//create_ndc_quad(device);
 	}
 
@@ -302,6 +309,9 @@ public:
 			new render_texture(device, float2(windowBounds.width, windowBounds.height))),
 		})
 		);
+
+			camdpmap = depth_render_texture(device, windowBounds.as_float2());
+
 	}
 
 	void update(float t, float dt) override
@@ -420,7 +430,47 @@ public:
 		uda->BeginEvent(L"Render to G Buffer");
 		context->OMSetDepthStencilState(nullptr, 0);
 		dr->render(context, this);
+		camdpmap.push(this);
+		draw_scene_dr(context, dpthonlysh);
+		pop_render_target();
 		uda->EndEvent();
+
+		{
+			camera c(float3(lights[0].pl.pos), float3(0, 0, 0), 0.1f, 1000.f, to_radians(90.f));
+			const float3 cubemap_looks[] =
+			{
+				float3(+1, 0, 0),
+				float3(-1, 0, 0),
+				float3(0, +1, 0),
+				float3(0, -1, 0),
+				float3(0, 0, +1),
+				float3(0, 0, -1),
+			};
+			const float3 cubemap_ups[] =
+			{
+				float3(0, 1, 0),
+				float3(0, 1, 0),
+				float3(0, 0, -1.f),
+				float3(0, 0, 1.f),
+				float3(0, 1, 0),
+				float3(0, 1, 0),
+			};
+			c.update_proj(1.f);
+			dpthonlysh.bind(context);
+			for (int i = 0; i < 6; ++i)
+			{
+				dshmap.push(this, i);
+				c.look_at(lights[0].pl.pos, cubemap_looks[i] + lights[0].pl.pos, cubemap_ups[i]);
+				c.update_view();
+				dpthonlysh.camera_position(c.position());
+				dpthonlysh.proj(c.proj());
+				dpthonlysh.view(c.view());
+				for (auto& o : gameobjects)
+					o->draw(context, dpthonlysh);
+				pop_render_target();
+			}
+			dpthonlysh.unbind(context);
+		}
 
 		uda->BeginEvent(L"Render lights to framebuffer");
 		dr->current_shader() = &pntlight_shader;
@@ -429,9 +479,12 @@ public:
 		rsl.bind(context);
 		context->OMSetDepthStencilState(stencil_read_rps.Get(), 0);
 
+		camdpmap.bind(context, shader_stage::Pixel, 4);
+		dshmap.bind(context, shader_stage::Pixel, 5);
+
 		light_cb.bind(context, shader_stage::Pixel);
 		stuff_cb.bind(context, shader_stage::Pixel);
-		for (auto l : lights)
+		for (auto& l : lights)
 		{
 			render_point_light(l);
 		}
@@ -442,6 +495,7 @@ public:
 		stuff_cb.unbind(context, shader_stage::Pixel);
 		bls.om_unbind(context);
 		rsl.unbind(context);
+		camdpmap.unbind(context, shader_stage::Pixel, 4);
 		dr->unbind(context);
 	}
 };

@@ -39,6 +39,8 @@ Texture2D diffuse_buffer : register(t0);
 Texture2D positions_buffer : register(t1);
 Texture2D normals_buffer : register(t2);
 Texture2D spec_buffer : register(t3);
+Texture2D cam_depth_buffer : register(t4);
+TextureCube shadow_cube : register(t5);
 SamplerState smp : register(s0);
 
 struct ps_in
@@ -52,9 +54,16 @@ struct ps_in
 float4 shade(float2 tc)
 {
 	float3 pw = positions_buffer.Sample(smp, tc).xyz;
+	if (pw.x == 0 && pw.y == 0 && pw.z == 0)
+	{
+		return float4(0, 0, 0, .5f);
+	}
 	float3 to_cam = normalize(cam_pos - pw);
 	float3 n = normalize(normals_buffer.Sample(smp, tc).xyz);
 	float3 l = pl.pos - pw;
+	float sl = shadow_cube.Sample(smp, -l).r;
+	float sc = cam_depth_buffer.Sample(smp, tc).r;
+	if (sl == sc) return float4(0, 0, 0, 1);
 	float a = clamp(1 / (pl.pos.w * dot(l, l)), 0, 1);;
 	l = normalize(l);
 	float df = max(dot(l, n), 0);
@@ -69,7 +78,7 @@ float4 shade(float2 tc)
 			color += sf * sp.yzw * pl.col;
 		}
 	}
-	return float4(a*color, 0.5f);
+	return float4((a*color), 0.5f);
 }
 
 float4 main(ps_in i) : SV_TARGET
