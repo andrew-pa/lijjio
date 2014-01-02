@@ -167,7 +167,8 @@ class df_lijjio_app : public dx_app
 
 	float sizeof_light_sphere(float x)
 	{
-		//unfortanatly, i couldn't find a equasion, so good ol' aproximation / a loop go through all posable values
+		//unfortunately, i couldn't find a equation to do this,
+		// so good ol' approximation / a loop go through all values of d
 		float d = 0.01f;
 		float a = FLT_MAX;
 		do
@@ -188,22 +189,9 @@ public:
 
 	void load() override
 	{
-		/*bo_file knot_mesh(read_data_from_package(L"cube.bo"));
-		auto tkd = knot_mesh["Cube"];
-		void* vertices = tkd.data + 2;
-		void* indices = tkd.data + (tkd.data[0] * sizeof(dvertex)) + (2*sizeof(uint));
-		uint vc = tkd.data[0];
-		uint ic = tkd.data[1];
-		knot = mesh(device, vertices,
-		indices, ic, vc, sizeof(dvertex), "cube");
-		*/
-		/*obk = model(mesh::create_sphere(device, 1.f, 32, 32));
-		grnd = model(mesh::create_grid(device, 16, 16, 4, 4));
-		*/
-
 		gameobjects.push_back(new game_object(new model(mesh::create_sphere(device, 1.f, 32, 32)), 
 			new texture2d(device, read_data_from_package(L"stone.dds")), 
-			float3(4, -2.f, 8), float3(), float3(1), 
+			float3(4, 2.f, 8), float3(), float3(1), 
 			basic_material(float4(.8f, .8f, .8f, 1), float3(.8f, .8f, .8f), 16, 
 				float3(.2f, .2f, .2f), false)));
 		//gameobjects.push_back(new game_object(new model(mesh::create_grid(device, 64, 64, 4, 4)), 
@@ -248,27 +236,12 @@ public:
 		//}
 
 		gameobjects.push_back(new game_object(new model(device, load_bo(read_data_from_package(L"base.bo"))), crate_texture, float3(7, 1, 7)));
-		gameobjects.push_back(new game_object(new model(device, load_bo(read_data_from_package(L"knot.bo"))), crate_texture, float3(4, -1.8f, -16)));
+		gameobjects.push_back(new game_object(new model(device, load_bo(read_data_from_package(L"knot.bo"))), 
+			crate_texture, float3(4, 2.0f, -16)));
 
 		auto basic_vs_data = read_data_from_package(L"basic_vs.cso");
-
-		dr = new deferred_renderer(device, 
-			deferred_renderer::draw_scene_func([&](ComPtr<ID3D11DeviceContext> ctx, render_shader& s) { this->draw_scene_dr(ctx, s); }), //strange hack around issue with STL
-			vector<deferred_renderer::renderpass>({
-				deferred_renderer::renderpass(
-					new shader(device, basic_vs_data, read_data_from_package(L"dr_diffuse_ps.cso"), posnormtex_layout, _countof(posnormtex_layout)), 
-					new render_texture(device, float2(windowBounds.width, windowBounds.height))),
-				deferred_renderer::renderpass(
-					new shader(device, basic_vs_data, read_data_from_package(L"dr_positions_ps.cso"), posnormtex_layout, _countof(posnormtex_layout)),
-					new render_texture(device, float2(windowBounds.width, windowBounds.height))),
-				deferred_renderer::renderpass(
-					new shader(device, basic_vs_data, read_data_from_package(L"dr_normals_ps.cso"), posnormtex_layout, _countof(posnormtex_layout)),
-					new render_texture(device, float2(windowBounds.width, windowBounds.height))),
-				deferred_renderer::renderpass(
-					new shader(device, basic_vs_data, read_data_from_package(L"dr_spec_ps.cso"), posnormtex_layout, _countof(posnormtex_layout)),
-					new render_texture(device, float2(windowBounds.width, windowBounds.height))),
-			})
-		);
+		
+		set_up_defered_renderer();
 
 		pntlight_shader = shader(device, basic_vs_data /*read_data_from_package(L"ndc_vs.cso")*/, read_data_from_package(L"dr_pointlight_ps.cso"), posnormtex_layout, _countof(posnormtex_layout));
 		light_cb = constant_buffer<point_light>(device, 2, point_light());
@@ -279,8 +252,8 @@ public:
 		stuff_cb = constant_buffer<float4>(device, 3, float4(windowBounds.width, windowBounds.height,0,0));
 		stuff_cb.update(context);
 
-		lights.push_back(point_light(float4(8, 0, 8, .02f), float4(1.f)));
-		lights.push_back(point_light(float4(8, 0, -16, .02f), float4(1.f)));
+		lights.push_back(point_light(float4(8, 4, 8, .02f), float4(1.f)));
+		lights.push_back(point_light(float4(8, 4, -16, .02f), float4(1.f)));
 		/*
 		lights.push_back(point_light(float4(0, 2, 0, .03f),  float4(0.8f, .8f, .4f, 1.f)));
 		for (int i = 0; i < 5; ++i)
@@ -301,30 +274,36 @@ public:
 		light_sphere = mesh::create_sphere(device, 1.2f, 6, 6);//create_ndc_quad(device);
 	}
 
+	void set_up_defered_renderer()
+	{
+		auto basic_vs_data = read_data_from_package(L"basic_vs.cso");
+
+		dr = new deferred_renderer(device,
+			deferred_renderer::draw_scene_func([&](ComPtr<ID3D11DeviceContext> ctx, render_shader& s) { this->draw_scene_dr(ctx, s); }), //strange hack around issue with STL
+			vector<deferred_renderer::renderpass>({
+			deferred_renderer::renderpass(
+			new shader(device, basic_vs_data, read_data_from_package(L"dr_diffuse_ps.cso"), posnormtex_layout, _countof(posnormtex_layout)),
+			new render_texture(device, float2(windowBounds.width, windowBounds.height))),
+			deferred_renderer::renderpass(
+			new shader(device, basic_vs_data, read_data_from_package(L"dr_positions_ps.cso"), posnormtex_layout, _countof(posnormtex_layout)),
+			new render_texture(device, float2(windowBounds.width, windowBounds.height))),
+			deferred_renderer::renderpass(
+			new shader(device, basic_vs_data, read_data_from_package(L"dr_normals_ps.cso"), posnormtex_layout, _countof(posnormtex_layout)),
+			new render_texture(device, float2(windowBounds.width, windowBounds.height))),
+			deferred_renderer::renderpass(
+			new shader(device, basic_vs_data, read_data_from_package(L"dr_spec_ps.cso"), posnormtex_layout, _countof(posnormtex_layout)),
+			new render_texture(device, float2(windowBounds.width, windowBounds.height))),
+		})
+		);
+	}
+
 	void update(float t, float dt) override
 	{
 		if (windowSizeChanged)
 		{
 			cam.update_proj(windowBounds.width / windowBounds.height);
 			delete dr;
-			auto basic_vs_data = read_data_from_package(L"basic_vs.cso");
-			dr = new deferred_renderer(device,
-				deferred_renderer::draw_scene_func([&](ComPtr<ID3D11DeviceContext> ctx, render_shader& s) { this->draw_scene_dr(ctx, s); }), //strange hack around issue with STL
-				vector<deferred_renderer::renderpass>({
-				deferred_renderer::renderpass(
-				new shader(device, basic_vs_data, read_data_from_package(L"dr_diffuse_ps.cso"), posnormtex_layout, _countof(posnormtex_layout)),
-				new render_texture(device, float2(windowBounds.width, windowBounds.height))),
-				deferred_renderer::renderpass(
-				new shader(device, basic_vs_data, read_data_from_package(L"dr_positions_ps.cso"), posnormtex_layout, _countof(posnormtex_layout)),
-				new render_texture(device, float2(windowBounds.width, windowBounds.height))),
-				deferred_renderer::renderpass(
-				new shader(device, basic_vs_data, read_data_from_package(L"dr_normals_ps.cso"), posnormtex_layout, _countof(posnormtex_layout)),
-				new render_texture(device, float2(windowBounds.width, windowBounds.height))),
-				deferred_renderer::renderpass(
-				new shader(device, basic_vs_data, read_data_from_package(L"dr_spec_ps.cso"), posnormtex_layout, _countof(posnormtex_layout)),
-				new render_texture(device, float2(windowBounds.width, windowBounds.height))),
-			})
-			);
+			set_up_defered_renderer();
 			dr->proj(cam.proj());
 			stuff_cb.data() = float4(windowBounds.width, windowBounds.height,0,0);
 			stuff_cb.update(context);
@@ -374,8 +353,8 @@ public:
 		dr->camera_position(cam.position());
 		dr->view(cam.view());
 
-		//gameobjects[0]->position().x = sinf(-t) * 8;
-		//gameobjects[0]->position().z = cosf(t) * 8;
+		gameobjects[0]->position().x = 8 + sinf(-t) * 6;
+		gameobjects[0]->position().z = 8 + cosf(t) * 6;
 
 		//static float2 light_vol = float2(randfn()*.25f, randfn()*.25f);
 		//light_vol = light_vol + float2(randfn(), randfn())*dt;
@@ -436,23 +415,6 @@ public:
 		context->OMSetDepthStencilState(nullptr, 0);
 		dr->render(context, this);
 		uda->EndEvent();
-
-		//uda->BeginEvent(L"Render to lights to stencil buf");
-		//dr->current_shader() = &null_shader;
-		//dr->bind(context);
-		//context->OMSetDepthStencilState(stencil_write_rps.Get(), 0);
-		//for (auto pl : lights)
-		//{
-		//	float s = sizeof_light_sphere(pl.pos.w);
-		//	dr->world(XMMatrixScaling(s, s, s) * XMMatrixTranslationFromVector(pl.pos));
-		//	dr->update(context);
-
-		//	light_cb.data() = pl;
-		//	light_cb.update(context);
-
-		//	light_sphere->draw(context);
-		//}
-		//uda->EndEvent();
 
 		uda->BeginEvent(L"Render lights to framebuffer");
 		dr->current_shader() = &pntlight_shader;
