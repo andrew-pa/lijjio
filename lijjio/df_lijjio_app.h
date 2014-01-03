@@ -172,7 +172,7 @@ class df_lijjio_app : public dx_app
 
 	deferred_renderer* dr;
 
-	depth_render_texture_cube dshmap;
+	render_texture_cube dshmap;
 	simple_shader dpthonlysh;
 	depth_render_texture camdpmap;
 
@@ -283,8 +283,8 @@ public:
 
 		device->CreateDepthStencilState(&rdsdec, stencil_read_rps.GetAddressOf());
 
-		dshmap = depth_render_texture_cube(device, 512);
-		dpthonlysh = simple_shader(device, basic_vs_data, nullptr);// read_data_from_package(L"dr_diffuse_ps.cso"));
+		dshmap = render_texture_cube(device, 512);
+		dpthonlysh = simple_shader(device, basic_vs_data, read_data_from_package(L"dr_dist_ps.cso"));
 		light_sphere = mesh::create_sphere(device, 1.2f, 6, 6);//create_ndc_quad(device);
 	}
 
@@ -370,8 +370,8 @@ public:
 		dr->camera_position(cam.position());
 		dr->view(cam.view());
 
-		gameobjects[0]->position().x = 8 + sinf(-t) * 6;
-		gameobjects[0]->position().z = 8 + cosf(t) * 6;
+		gameobjects[0]->position().x = 8 + sinf(-t) * 5;
+		gameobjects[0]->position().z = 8 + cosf(t) * 5;
 
 		//static float2 light_vol = float2(randfn()*.25f, randfn()*.25f);
 		//light_vol = light_vol + float2(randfn(), randfn())*dt;
@@ -430,9 +430,6 @@ public:
 		uda->BeginEvent(L"Render to G Buffer");
 		context->OMSetDepthStencilState(nullptr, 0);
 		dr->render(context, this);
-		camdpmap.push(this);
-		draw_scene_dr(context, dpthonlysh);
-		pop_render_target();
 		uda->EndEvent();
 
 		{
@@ -457,6 +454,9 @@ public:
 			};
 			c.update_proj(1.f);
 			dpthonlysh.bind(context);
+			light_cb.data() = lights[0].pl;
+			light_cb.bind(context, shader_stage::Pixel);
+			light_cb.update(context);
 			for (int i = 0; i < 6; ++i)
 			{
 				dshmap.push(this, i);
@@ -469,6 +469,7 @@ public:
 					o->draw(context, dpthonlysh);
 				pop_render_target();
 			}
+			light_cb.unbind(context, shader_stage::Pixel);
 			dpthonlysh.unbind(context);
 		}
 
@@ -479,8 +480,7 @@ public:
 		rsl.bind(context);
 		context->OMSetDepthStencilState(stencil_read_rps.Get(), 0);
 
-		camdpmap.bind(context, shader_stage::Pixel, 4);
-		dshmap.bind(context, shader_stage::Pixel, 5);
+		dshmap.bind(context, shader_stage::Pixel, 4);
 
 		light_cb.bind(context, shader_stage::Pixel);
 		stuff_cb.bind(context, shader_stage::Pixel);
@@ -495,7 +495,7 @@ public:
 		stuff_cb.unbind(context, shader_stage::Pixel);
 		bls.om_unbind(context);
 		rsl.unbind(context);
-		camdpmap.unbind(context, shader_stage::Pixel, 4);
+		dshmap.unbind(context, shader_stage::Pixel, 4);
 		dr->unbind(context);
 	}
 };

@@ -1,7 +1,7 @@
 cbuffer camera : register (b0)
 {
 	float4x4 view;
-	float4x4 world;
+	float4x4 proj;
 	float3 cam_pos;
 };
 
@@ -39,8 +39,7 @@ Texture2D diffuse_buffer : register(t0);
 Texture2D positions_buffer : register(t1);
 Texture2D normals_buffer : register(t2);
 Texture2D spec_buffer : register(t3);
-Texture2D cam_depth_buffer : register(t4);
-TextureCube shadow_cube : register(t5);
+TextureCube shadow_cube : register(t4);
 SamplerState smp : register(s0);
 
 struct ps_in
@@ -50,6 +49,11 @@ struct ps_in
 	float2 texc : TEXCOORD0;
 	float3 normW : NORMAL;
 };
+
+float length_sq(float3 f)
+{
+	return dot(f, f);
+}
 
 float4 shade(float2 tc)
 {
@@ -61,9 +65,15 @@ float4 shade(float2 tc)
 	float3 to_cam = normalize(cam_pos - pw);
 	float3 n = normalize(normals_buffer.Sample(smp, tc).xyz);
 	float3 l = pl.pos - pw;
-	float sl = shadow_cube.Sample(smp, -l).r;
-	float sc = cam_depth_buffer.Sample(smp, tc).r;
-	if (sl == sc) return float4(0, 0, 0, 1);
+
+	float lightd = shadow_cube.Sample(smp, -l).r;
+	float camlightd = length(l);
+	float shadow = (camlightd - lightd < 0.f) ? 1.f : 0.2f;
+	/*float ldepth_from_light = length_sq(pl.pos.xyz - shadow_cube.Sample(smp, -l));
+	float cdepth_from_light = length_sq(pl.pos.xyz - pw);
+	if (ldepth_from_light < cdepth_from_light)
+		return float4(ldepth_from_light, 1, cdepth_from_light, .5f);*/
+
 	float a = clamp(1 / (pl.pos.w * dot(l, l)), 0, 1);;
 	l = normalize(l);
 	float df = max(dot(l, n), 0);
@@ -78,7 +88,7 @@ float4 shade(float2 tc)
 			color += sf * sp.yzw * pl.col;
 		}
 	}
-	return float4((a*color), 0.5f);
+	return float4(color*a, 0.5f);
 }
 
 float4 main(ps_in i) : SV_TARGET

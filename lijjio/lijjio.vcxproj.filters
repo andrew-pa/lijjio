@@ -73,6 +73,9 @@
     <FxCompile Include="dr_spec_ps.hlsl">
       <Filter>Source Files\Shaders</Filter>
     </FxCompile>
+    <FxCompile Include="dr_dist_ps.hlsl">
+      <Filter>Source Files\Shaders</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="Media\floor.dds" />
