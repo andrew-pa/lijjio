@@ -151,13 +151,39 @@
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="Media\*.dds">
+    <CustomBuild Include="Media\crate.dds">
       <FileType>Document</FileType>
-      <Command>copy "%(FullPath)" "$(TargetDir)%(Filename).dds"</Command>
-      <Message>Copying %(Filename).dds</Message>
-      <Outputs>$(TargetDir)\%(Filename).dds</Outputs>
+      <Command>copy "C:\Users\Andrew\Source\lijjio\lijjio\Media\crate.dds" "C:\Users\Andrew\Source\lijjio\Debug\crate.dds"</Command>
+      <Message>Copying crate.dds</Message>
+      <Outputs>C:\Users\Andrew\Source\lijjio\Debug\\crate.dds</Outputs>
       <LinkObjects>false</LinkObjects>
       <TreatOutputAsContent>true</TreatOutputAsContent>
+    </CustomBuild>
+    <CustomBuild Include="Media\org.dds">
+      <FileType>Document</FileType>
+      <Command>copy "C:\Users\Andrew\Source\lijjio\lijjio\Media\org.dds" "C:\Users\Andrew\Source\lijjio\Debug\org.dds"</Command>
+      <Message>Copying org.dds</Message>
+      <Outputs>C:\Users\Andrew\Source\lijjio\Debug\\org.dds</Outputs>
+      <LinkObjects>false</LinkObjects>
+      <TreatOutputAsContent>true</TreatOutputAsContent>
+    </CustomBuild>
+    <CustomBuild Include="Media\stone.dds">
+      <FileType>Document</FileType>
+      <Command>copy "C:\Users\Andrew\Source\lijjio\lijjio\Media\stone.dds" "C:\Users\Andrew\Source\lijjio\Debug\stone.dds"</Command>
+      <Message>Copying stone.dds</Message>
+      <Outputs>C:\Users\Andrew\Source\lijjio\Debug\\stone.dds</Outputs>
+      <LinkObjects>false</LinkObjects>
+      <TreatOutputAsContent>true</TreatOutputAsContent>
+    </CustomBuild>
+    <CustomBuild Include="Media\wall.dds">
+      <FileType>Document</FileType>
+      <Command>copy "C:\Users\Andrew\Source\lijjio\lijjio\Media\stone.dds" "C:\Users\Andrew\Source\lijjio\Debug\stone.dds"</Command>
+      <Message>Copying stone.dds</Message>
+      <Outputs>C:\Users\Andrew\Source\lijjio\Debug\\stone.dds</Outputs>
+      <LinkObjects>false</LinkObjects>
+      <TreatOutputAsContent>true</TreatOutputAsContent>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">copy "C:\Users\Andrew\Source\lijjio\lijjio\Media\wall.dds" "C:\Users\Andrew\Source\lijjio\Debug\wall.dds"</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Copying wall.dds</Message>
     </CustomBuild>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

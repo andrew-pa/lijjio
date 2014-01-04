@@ -144,7 +144,70 @@ public:
 	}
 };
 
+static float sizeof_light_sphere(float x)
+{
+	//unfortunately, i couldn't find a equation to do this,
+	// so good ol' approximation / a loop go through all values of d
+	float d = 0.01f;
+	float a = FLT_MAX;
+	do
+	{
+		d += 0.01f;
+		a = (1 / (x*(d*d)));
+	} while (fabsf(a) > 0.03f);
+	return d;
+}
 
+struct pnt_light
+{
+	point_light pl;
+	float radius;
+	pnt_light(float3 pos, float att, float4 col)
+		: pl(float4(pos, att), col)
+	{
+		radius = sizeof_light_sphere(pl.pos.w);
+	}
+};
+
+class point_light_shader : public shader
+{
+	constant_buffer<point_light> light_cb;
+	constant_buffer<float4> stuff_cb;
+public:
+	point_light_shader(){}
+	point_light_shader(ComPtr<ID3D11Device> device, datablob<byte>* vs_data, datablob<byte>* ps_data, float2 screen_dims)
+		: shader(device, vs_data, ps_data, posnormtex_layout, _countof(posnormtex_layout)), light_cb(device, 2, point_light()), stuff_cb(device, 3, float4(screen_dims, 0, 0))
+	{
+	}
+
+	inline void set_light(const pnt_light& l)
+	{
+		light_cb.data() = l.pl;
+	}
+	inline void set_screen_size(float2 size)
+	{
+		stuff_cb.data() = float4(size, 0, 0);
+	}
+
+
+	inline void bind(ComPtr<ID3D11DeviceContext> context) override
+	{
+		shader::bind(context);
+		light_cb.bind(context, shader_stage::Pixel);
+		stuff_cb.bind(context, shader_stage::Pixel);
+	}
+	inline void unbind(ComPtr<ID3D11DeviceContext> context) override
+	{
+		shader::unbind(context);
+		light_cb.unbind(context, shader_stage::Pixel);
+		stuff_cb.unbind(context, shader_stage::Pixel);
+	}
+	inline void update(ComPtr<ID3D11DeviceContext> context) override
+	{
+		light_cb.update(context);
+		stuff_cb.update(context);
+	}
+};
 
 
 class df_lijjio_app : public dx_app
@@ -152,20 +215,9 @@ class df_lijjio_app : public dx_app
 	vector<game_object*> gameobjects;
 	camera cam;
 
-	shader pntlight_shader;
-	constant_buffer<point_light> light_cb;
-	constant_buffer<float4> stuff_cb;
+	point_light_shader pntlight_shader;
 	
-	struct pnt_light
-	{
-		point_light pl;
-		float radius;
-		pnt_light(float3 pos, float att, float4 col)
-			: pl(float4(pos, att), col)
-		{
-			radius = sizeof_light_sphere(pl.pos.w);
-		}
-	};
+
 	vector<pnt_light> lights;
 
 	mesh* light_sphere;
@@ -176,23 +228,11 @@ class df_lijjio_app : public dx_app
 	rasterizer_state rsl;
 	ComPtr<ID3D11DepthStencilState> stencil_read_rps;
 
-	static float sizeof_light_sphere(float x)
-	{
-		//unfortunately, i couldn't find a equation to do this,
-		// so good ol' approximation / a loop go through all values of d
-		float d = 0.01f;
-		float a = FLT_MAX;
-		do
-		{
-			d += 0.01f;
-			a = (1 / (x*(d*d)));
-		} while (fabsf(a) > 0.03f);
-		return d;
-	}
+
 public:
 	df_lijjio_app()
 		: dx_app(4, true),
-		cam(float3(0, 0, 4.1f), float3(0, 0.1f, 0), 0.1f, 1000.f, to_radians(45.f))
+		cam(float3(12, 7, 12.f), float3(8, 5.1f, 8), 0.1f, 1000.f, to_radians(45.f))
 	{
 		this->clear_color = float4(0, 0, 0, 1);
 		
@@ -201,65 +241,23 @@ public:
 	void load() override
 	{
 		gameobjects.push_back(new game_object(new model(mesh::create_sphere(device, 1.f, 32, 32)), 
-			new texture2d(device, read_data_from_package(L"stone.dds")), 
+			new texture2d(device, read_data_from_package(L"crate.dds")), 
 			float3(4, 2.f, 8), float3(), float3(1), 
 			basic_material(float4(.8f, .8f, .8f, 1), float3(.8f, .8f, .8f), 16, 
 				float3(.2f, .2f, .2f), false)));
-		//gameobjects.push_back(new game_object(new model(mesh::create_grid(device, 64, 64, 4, 4)), 
-		//	new texture2d(device, read_data_from_package(L"floor.dds")), float3(), float3(), float3(1)));
-		//
-		//auto crate_model = new model(mesh::create_box(device, 1.f, 1.f, 1.f));
-		auto crate_texture = new texture2d(device, read_data_from_package(L"crate.dds"));
 
-		//for (float y = 0; y < 5; ++y)
-		//{
-		//	float vx = (5.f - y)*.5f;
-		//	for (float x = -vx; x < vx; ++x)
-		//	{
-		//		gameobjects.push_back(new game_object(crate_model, crate_texture, float3(x, y + .5f, -4)));
-		//	}
-		//}
+		auto wall_texture = new texture2d(device, read_data_from_package(L"wall.dds"));
+		auto orange_texture = new texture2d(device, read_data_from_package(L"org.dds"));
 
-		//for (float y = 0; y < 5; ++y)
-		//{
-		//	float vx = (5.f - y)*.5f;
-		//	for (float x = -vx; x < vx; ++x)
-		//	{
-		//		gameobjects.push_back(new game_object(crate_model, crate_texture, float3(x, y + .5f, 4)));
-		//	}
-		//}
-
-		//for (float y = 0; y < 5; ++y)
-		//{
-		//	float vx = (5.f - y)*.5f;
-		//	for (float x = -vx; x < vx; ++x)
-		//	{
-		//		gameobjects.push_back(new game_object(crate_model, crate_texture, float3(x+16, y + .5f, -20)));
-		//	}
-		//}
-		//for (float y = 0; y < 5; ++y)
-		//{
-		//	float vx = (5.f - y)*.5f;
-		//	for (float x = -vx; x < vx; ++x)
-		//	{
-		//		gameobjects.push_back(new game_object(crate_model, crate_texture, float3(x - 16, y + .5f, 20)));
-		//	}
-		//}
-
-		gameobjects.push_back(new game_object(new model(device, load_bo(read_data_from_package(L"base.bo"))), crate_texture, float3(7, 1, 7)));
+		gameobjects.push_back(new game_object(new model(device, load_bo(read_data_from_package(L"base.bo"))), wall_texture, float3(7, 1, 7)));
 		gameobjects.push_back(new game_object(new model(device, load_bo(read_data_from_package(L"knot.bo"))), 
-			crate_texture, float3(4, 2.0f, -16)));
+			orange_texture, float3(4, 2.0f, -16)));
 
 		auto basic_vs_data = read_data_from_package(L"basic_vs.cso");
 		
 		set_up_defered_renderer();
 
-		pntlight_shader = shader(device, basic_vs_data /*read_data_from_package(L"ndc_vs.cso")*/, read_data_from_package(L"dr_pointlight_ps.cso"), posnormtex_layout, _countof(posnormtex_layout));
-		light_cb = constant_buffer<point_light>(device, 2, point_light());
-
-		stuff_cb = constant_buffer<float4>(device, 3, 
-			float4(windowBounds.width, windowBounds.height, 0, 0));
-		stuff_cb.update(context);
+		pntlight_shader = point_light_shader(device, basic_vs_data /*read_data_from_package(L"ndc_vs.cso")*/, read_data_from_package(L"dr_pointlight_ps.cso"), windowBounds.as_float2());
 
 		lights.push_back(pnt_light(float3(8, 5, 8), .02f, float4(1.f)));
 		lights.push_back(pnt_light(float3(8, 4, -16), .02f, float4(1.f, 1.f, .9f, 1.f)));
@@ -317,8 +315,7 @@ public:
 			delete dr;
 			set_up_defered_renderer();
 			dr->proj(cam.proj());
-			stuff_cb.data() = float4(windowBounds.width, windowBounds.height,0,0);
-			stuff_cb.update(context);
+			pntlight_shader.set_screen_size(windowBounds.as_float2());
 			windowSizeChanged = false;
 		}
 
@@ -402,8 +399,7 @@ public:
 			i++;
 		}
 
-		light_cb.data() = pl.pl;
-		light_cb.update(context);
+		pntlight_shader.set_light(pl);
 
 		light_sphere->draw(context);		
 		
@@ -434,16 +430,10 @@ public:
 		rsl.bind(context);
 		context->OMSetDepthStencilState(stencil_read_rps.Get(), 0);
 
-		light_cb.bind(context, shader_stage::Pixel);
-		stuff_cb.bind(context, shader_stage::Pixel);
 		for (auto& l : lights)
 		{
 			render_point_light(l);
 		}
-
-		pntlight_shader.unbind(context);
-		light_cb.unbind(context, shader_stage::Pixel);
-		stuff_cb.unbind(context, shader_stage::Pixel);
 		bls.om_unbind(context);
 		rsl.unbind(context);
 		dr->unbind(context);
