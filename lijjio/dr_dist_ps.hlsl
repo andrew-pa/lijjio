@@ -37,8 +37,14 @@ struct ps_in
 	float3 normW : NORMAL;
 };
 
+float new_length(float3 l)
+{
+	return length(l);
+}
+
+
 float4 main(ps_in i) : SV_TARGET
 {
-	float d = length(pl.pos - i.posW);
-	return float4(d, d, d, 1);
+	float d = length(-(pl.pos.xyz - i.posW))+0.001f;
+	return float4(d*.1f, d*.1f, d*.1f, 1);
 }

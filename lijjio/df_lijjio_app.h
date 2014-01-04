@@ -172,10 +172,6 @@ class df_lijjio_app : public dx_app
 
 	deferred_renderer* dr;
 
-	render_texture_cube dshmap;
-	simple_shader dpthonlysh;
-	depth_render_texture camdpmap;
-
 	blend_state bls;
 	rasterizer_state rsl;
 	ComPtr<ID3D11DepthStencilState> stencil_read_rps;
@@ -261,11 +257,15 @@ public:
 		pntlight_shader = shader(device, basic_vs_data /*read_data_from_package(L"ndc_vs.cso")*/, read_data_from_package(L"dr_pointlight_ps.cso"), posnormtex_layout, _countof(posnormtex_layout));
 		light_cb = constant_buffer<point_light>(device, 2, point_light());
 
-		stuff_cb = constant_buffer<float4>(device, 3, float4(windowBounds.width, windowBounds.height,0,0));
+		stuff_cb = constant_buffer<float4>(device, 3, 
+			float4(windowBounds.width, windowBounds.height, 0, 0));
 		stuff_cb.update(context);
 
-		lights.push_back(pnt_light(float3(8, 4, 8), .02f, float4(1.f)));
+		lights.push_back(pnt_light(float3(8, 5, 8), .02f, float4(1.f)));
 		lights.push_back(pnt_light(float3(8, 4, -16), .02f, float4(1.f, 1.f, .9f, 1.f)));
+
+		lights.push_back(pnt_light(float3(-60, 4, 12), .005f, float4(1.f, 1.f, 1.f, 1.f)));
+		lights.push_back(pnt_light(float3(-20, 4, 12), .02f, float4(1.f, 1.f, 1.f, 1.f)));
 		/*
 		lights.push_back(point_light(float4(0, 2, 0, .03f),  float4(0.8f, .8f, .4f, 1.f)));
 		for (int i = 0; i < 5; ++i)
@@ -283,8 +283,6 @@ public:
 
 		device->CreateDepthStencilState(&rdsdec, stencil_read_rps.GetAddressOf());
 
-		dshmap = render_texture_cube(device, 512);
-		dpthonlysh = simple_shader(device, basic_vs_data, read_data_from_package(L"dr_dist_ps.cso"));
 		light_sphere = mesh::create_sphere(device, 1.2f, 6, 6);//create_ndc_quad(device);
 	}
 
@@ -309,9 +307,6 @@ public:
 			new render_texture(device, float2(windowBounds.width, windowBounds.height))),
 		})
 		);
-
-			camdpmap = depth_render_texture(device, windowBounds.as_float2());
-
 	}
 
 	void update(float t, float dt) override
@@ -432,47 +427,6 @@ public:
 		dr->render(context, this);
 		uda->EndEvent();
 
-		{
-			camera c(float3(lights[0].pl.pos), float3(0, 0, 0), 0.1f, 1000.f, to_radians(90.f));
-			const float3 cubemap_looks[] =
-			{
-				float3(+1, 0, 0),
-				float3(-1, 0, 0),
-				float3(0, +1, 0),
-				float3(0, -1, 0),
-				float3(0, 0, +1),
-				float3(0, 0, -1),
-			};
-			const float3 cubemap_ups[] =
-			{
-				float3(0, 1, 0),
-				float3(0, 1, 0),
-				float3(0, 0, -1.f),
-				float3(0, 0, 1.f),
-				float3(0, 1, 0),
-				float3(0, 1, 0),
-			};
-			c.update_proj(1.f);
-			dpthonlysh.bind(context);
-			light_cb.data() = lights[0].pl;
-			light_cb.bind(context, shader_stage::Pixel);
-			light_cb.update(context);
-			for (int i = 0; i < 6; ++i)
-			{
-				dshmap.push(this, i);
-				c.look_at(lights[0].pl.pos, cubemap_looks[i] + lights[0].pl.pos, cubemap_ups[i]);
-				c.update_view();
-				dpthonlysh.camera_position(c.position());
-				dpthonlysh.proj(c.proj());
-				dpthonlysh.view(c.view());
-				for (auto& o : gameobjects)
-					o->draw(context, dpthonlysh);
-				pop_render_target();
-			}
-			light_cb.unbind(context, shader_stage::Pixel);
-			dpthonlysh.unbind(context);
-		}
-
 		uda->BeginEvent(L"Render lights to framebuffer");
 		dr->current_shader() = &pntlight_shader;
 		dr->bind(context);
@@ -480,22 +434,19 @@ public:
 		rsl.bind(context);
 		context->OMSetDepthStencilState(stencil_read_rps.Get(), 0);
 
-		dshmap.bind(context, shader_stage::Pixel, 4);
-
 		light_cb.bind(context, shader_stage::Pixel);
 		stuff_cb.bind(context, shader_stage::Pixel);
 		for (auto& l : lights)
 		{
 			render_point_light(l);
 		}
-		uda->EndEvent();
 
 		pntlight_shader.unbind(context);
 		light_cb.unbind(context, shader_stage::Pixel);
 		stuff_cb.unbind(context, shader_stage::Pixel);
 		bls.om_unbind(context);
 		rsl.unbind(context);
-		dshmap.unbind(context, shader_stage::Pixel, 4);
 		dr->unbind(context);
+		uda->EndEvent();
 	}
 };
